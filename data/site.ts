@@ -1,6 +1,6 @@
 // All portfolio content lives here. Edit this file to update the site.
-// To add a project: copy an entry in `projects`, change the text, and
-// (optionally) drop screenshots in /public/projects and list them in `images`.
+// To add a project: copy an entry in `projects` and change the text. The
+// workflow diagram and graph view are drawn from `flow` and `uses`.
 
 export const profile = {
   name: "Taha Umar",
@@ -45,8 +45,11 @@ export type Role = {
   period: string;
   place: string;
   type: string;
-  color: string;
-  initials: string;
+  art: "prism" | "maple" | "pulse" | "lens" | "grad";
+  /** Optional disc artwork in /public/experience. "cover" fills the disc; "logo" prints it like a CD label. */
+  image?: { src: string; fit: "cover" | "logo"; bg?: string };
+  stack: string[];
+  highlights: { label: string; text: string }[];
   points: string[];
 };
 
@@ -57,8 +60,12 @@ export const experience: Role[] = [
     period: "Jul 2025 – Present",
     place: "United States · Remote",
     type: "Contract",
-    color: "#c8f031",
-    initials: "T",
+    art: "prism",
+    stack: ["LangGraph", "MCP", "Airflow", "dbt", "Kubernetes"],
+    highlights: [
+      { label: "Multi-agent systems", text: "Agents that run financial checks end to end" },
+      { label: "LLMOps", text: "Every run traced, evaluated, guarded" },
+    ],
     points: [
       "Direct ML architecture, generative AI integrations and model performance across client products.",
       "Design multi-agent systems with LangGraph, LangChain and MCP that automate financial workflows and regulatory checks.",
@@ -72,8 +79,13 @@ export const experience: Role[] = [
     period: "Dec 2024 – Jun 2025",
     place: "Ontario, Canada · Remote",
     type: "Contract",
-    color: "#8b7bff",
-    initials: "CI",
+    art: "maple",
+    image: { src: "/experience/kangaroo.png", fit: "cover" },
+    stack: ["MLflow", "Docker", "Kubernetes", "CI/CD"],
+    highlights: [
+      { label: "Enterprise MLOps", text: "Training to deployment, one pipeline" },
+      { label: "Model audits", text: "Accuracy, drift and latency, fixed" },
+    ],
     points: [
       "Delivered specialized AI models for enterprise clients, from problem framing and training to deployment.",
       "Streamlined MLOps pipelines for training, versioning and deployment with MLflow, Docker, Kubernetes and CI/CD.",
@@ -82,12 +94,17 @@ export const experience: Role[] = [
   },
   {
     company: "Core Edge Solutions",
-    title: "Senior Machine Learning Engineer",
+    title: "Senior ML Engineer",
     period: "Feb 2023 – Nov 2024",
     place: "Lahore · Hybrid",
     type: "Full-time",
-    color: "#22d3ee",
-    initials: "CE",
+    art: "pulse",
+    image: { src: "/experience/core-edge.png", fit: "logo", bg: "#ececec" },
+    stack: ["LlamaIndex", "pgvector", "Elasticsearch", "Kafka", "SageMaker"],
+    highlights: [
+      { label: "Healthcare RAG", text: "Grounded answers from medical documents" },
+      { label: "Data pipelines", text: "Batch and streaming into Snowflake" },
+    ],
     points: [
       "Built a production generative AI assistant for healthcare on RAG with hybrid search and reranking.",
       "Built ingestion, chunking, embedding and retrieval pipelines with LangChain, LlamaIndex, pgvector and Elasticsearch.",
@@ -101,8 +118,13 @@ export const experience: Role[] = [
     period: "Sep 2020 – Jan 2023",
     place: "Lahore · On-site",
     type: "Full-time",
-    color: "#f5a524",
-    initials: "G",
+    art: "lens",
+    image: { src: "/experience/geniteam.png", fit: "logo", bg: "#f4f4f4" },
+    stack: ["OpenCV", "YOLO", "XGBoost", "Keras", "Flask"],
+    highlights: [
+      { label: "Computer vision", text: "Guest processing with YOLO" },
+      { label: "Pricing & RecSys", text: "Models that move revenue" },
+    ],
     points: [
       "Built recommendation systems and dynamic pricing models for hospitality products.",
       "Developed computer vision workflows for guest processing with OpenCV, YOLO and TensorFlow.",
@@ -116,55 +138,96 @@ export const experience: Role[] = [
     period: "2016 – 2020",
     place: "Lahore",
     type: "Education",
-    color: "#f472b6",
-    initials: "F",
-    points: [
-      "Head of the SOFTEC AI event.",
-      "Winner, SOFTEC Programming Competition.",
+    art: "grad",
+    image: { src: "/experience/fast.png", fit: "logo", bg: "#f7f7f7" },
+    stack: ["C++", "Python", "Algorithms"],
+    highlights: [
+      { label: "SOFTEC", text: "Winner, programming competition" },
+      { label: "Leadership", text: "Head of the SOFTEC AI event" },
     ],
+    points: ["Head of the SOFTEC AI event.", "Winner, SOFTEC Programming Competition."],
   },
 ];
 
-export const journey = [
+/* "How I got here" story. Each chapter draws a scene on the horizon. */
+export const story = [
   {
-    year: "2020",
-    title: "Pixels",
-    text: "Computer vision for guest processing. OpenCV, YOLO, TensorFlow. Learned that data prep is most of the job.",
-    tags: ["OpenCV", "YOLO", "Keras"],
+    place: "FAST-NUCES · 2016 – 2020",
+    title: ["I started with a keyboard", "and a competition."],
+    text: "Computer science in Lahore. I ran the SOFTEC AI event, and won the SOFTEC programming competition.",
+    scene: "laptop",
   },
   {
-    year: "2021",
-    title: "Predictions",
-    text: "Recommenders, dynamic pricing and time-series forecasting for hospitality. Models that move revenue.",
-    tags: ["XGBoost", "Forecasting", "RecSys"],
+    place: "GenITeam · 2020",
+    title: ["I taught cameras", "to see guests."],
+    text: "My first job: computer vision for hospitality. OpenCV, YOLO, TensorFlow, and a lot of data cleaning nobody talks about.",
+    scene: "camera",
   },
   {
-    year: "2023",
-    title: "Retrieval",
-    text: "Generative AI in healthcare, where wrong answers aren't an option. Hybrid search, reranking, evaluation.",
-    tags: ["RAG", "pgvector", "LlamaIndex"],
+    place: "GenITeam · 2021",
+    title: ["Then prices that", "move with demand."],
+    text: "Recommenders, dynamic pricing and forecasting. I learned a model only matters when it moves a number.",
+    scene: "chart",
   },
   {
-    year: "2025",
-    title: "Agents",
-    text: "Multi-agent systems that coordinate, call tools over MCP, and get traced, evaluated and guarded on every run.",
-    tags: ["LangGraph", "MCP", "Langfuse"],
+    place: "Core Edge · 2023",
+    title: ["Healthcare. Where wrong", "answers aren't allowed."],
+    text: "A RAG assistant over medical documents: hybrid search, reranking, and evaluation instead of vibes.",
+    scene: "pulse",
   },
-];
+  {
+    place: "Canada Inc. · 2024",
+    title: ["Consulting: making", "models survive."],
+    text: "Enterprise clients, MLOps pipelines, audits for drift and latency. Shipping stopped being an event and became a process.",
+    scene: "pipeline",
+  },
+  {
+    place: "Techprysm · 2025",
+    title: ["Now: agents that", "work together."],
+    text: "I lead multi-agent systems on LangGraph and MCP, with tracing, evals and guardrails around every run.",
+    scene: "network",
+  },
+  {
+    place: "Next",
+    title: ["The next chapter", "could be yours."],
+    text: "Got a workflow that should run itself? Let's draw it together.",
+    scene: "door",
+  },
+] as const;
+
+/* ---------------- Projects ---------------- */
+
+export type FlowNode = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  kind: "io" | "router" | "agent" | "tool" | "store" | "hub" | "step";
+};
+export type Flow = {
+  nodes: FlowNode[];
+  edges: [string, string][];
+  routes: { path: string[]; caption: string }[];
+  groups?: { label: string; x: number; y: number; w: number; h: number; tone: "accent" | "accent-2" | "accent-3" }[];
+};
 
 export type Stat = { value: string; label: string };
 
 export type Project = {
   slug: string;
+  year: string;
   category: string;
   title: string;
   tagline: string;
   problem: string;
-  solution: string;
+  built: string[];
   role: string;
   tech: string[];
-  stats: Stat[];
-  visual: "finbot" | "rag" | "hospitality" | "none";
+  stats?: Stat[];
+  mockup: "finbot" | "health" | "hospitality" | "archive" | "relay" | "workforce";
+  flow: Flow;
+  /** Which flow nodes each technology powers (used by the graph view) */
+  uses: Record<string, string[]>;
   images?: { src: string; alt: string }[];
   link?: { label: string; href: string };
 };
@@ -172,57 +235,260 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "finbot",
+    year: "2025",
     category: "AI Agents · FinTech",
-    title: "FinBot: Multi-Agent Financial Compliance",
-    tagline: "Three agents, one router, and tools they can actually trust.",
-    problem:
-      "Finance teams were reviewing documents, checking them against regulations and assembling reports by hand. Slow, inconsistent, and hard to audit after the fact.",
-    solution:
-      "A LangGraph router sends each request to the right specialist: document analysis, compliance checking or report generation. The agents reach the outside world through MCP servers I designed (a database query tool, a calculation engine and a visualization generator), so they pull real numbers, do exact math instead of guessing, and chart the results for the final report. Every run is traced, evaluated and wrapped in guardrails.",
+    title: "FinBot",
+    tagline: "A multi-agent system that reviews financial documents, checks them against regulations, and writes the report.",
+    problem: "Finance teams were reviewing filings, checking rules and building reports by hand. Slow, inconsistent and hard to audit.",
+    built: [
+      "LangGraph router sends each request to a document, compliance or report agent",
+      "MCP servers give agents real tools: database queries, exact maths, chart generation",
+      "Tracing, evals and guardrails around every run with LangSmith and Langfuse",
+    ],
     role: "Lead AI/ML Engineer · architecture, agents, MCP servers, LLMOps",
     tech: ["LangGraph", "LangChain", "MCP", "LangSmith", "Langfuse", "Docker", "Kubernetes", "AWS"],
     stats: [
       { value: "3", label: "Specialist agents" },
       { value: "3", label: "MCP tool servers" },
-      { value: "100%", label: "Runs traced & evaluated" },
+      { value: "100%", label: "Runs traced" },
     ],
-    visual: "finbot",
+    mockup: "finbot",
+    flow: {
+      nodes: [
+        { id: "user", label: "User query", x: 240, y: 30, kind: "io" },
+        { id: "router", label: "LangGraph router", x: 240, y: 100, kind: "router" },
+        { id: "doc", label: "Document analysis", x: 85, y: 180, kind: "agent" },
+        { id: "comp", label: "Compliance check", x: 240, y: 180, kind: "agent" },
+        { id: "rep", label: "Report writer", x: 395, y: 180, kind: "agent" },
+        { id: "mcp", label: "MCP servers", x: 240, y: 255, kind: "hub" },
+        { id: "db", label: "DB query", x: 85, y: 322, kind: "tool" },
+        { id: "calc", label: "Calc engine", x: 240, y: 322, kind: "tool" },
+        { id: "viz", label: "Visualization", x: 395, y: 322, kind: "tool" },
+      ],
+      edges: [
+        ["user", "router"], ["router", "doc"], ["router", "comp"], ["router", "rep"],
+        ["doc", "mcp"], ["comp", "mcp"], ["rep", "mcp"], ["mcp", "db"], ["mcp", "calc"], ["mcp", "viz"],
+      ],
+      routes: [
+        { path: ["user", "router", "doc", "mcp", "db"], caption: "document agent pulls the filing's figures via mcp:db.query" },
+        { path: ["user", "router", "comp", "mcp", "calc"], caption: "compliance agent checks ratios with mcp:calc, no guessed maths" },
+        { path: ["user", "router", "rep", "mcp", "viz"], caption: "report agent charts the results with mcp:viz" },
+      ],
+      groups: [
+        { label: "LANGGRAPH · AGENTS", x: 12, y: 72, w: 456, h: 140, tone: "accent-2" },
+        { label: "MCP · TOOLS", x: 12, y: 230, w: 456, h: 118, tone: "accent" },
+      ],
+    },
+    uses: { LangGraph: ["router"], LangChain: ["doc", "comp", "rep"], MCP: ["mcp"], LangSmith: ["router", "comp"], Langfuse: ["router", "rep"], Docker: ["mcp"], Kubernetes: ["mcp"], AWS: ["db"] },
+  },
+  {
+    slug: "workforce",
+    year: "2025",
+    category: "Multi-tenant SaaS · Analytics",
+    title: "Workforce Intelligence",
+    tagline: "A multi-tenant platform that turns operational workforce data into daily, weekly and monthly reports with AI-written insights.",
+    problem: "Managers were stitching workforce numbers together in spreadsheets, so reports came late and said little.",
+    built: [
+      "Scheduled ELT with Airflow and dbt into PostgreSQL, isolated per tenant",
+      "Celery + Redis jobs build daily, weekly and monthly reports on schedule",
+      "An LLM step writes the plain-English insight on top of the numbers",
+    ],
+    role: "Lead AI/ML Engineer · data platform, report jobs, AI insights",
+    tech: ["PostgreSQL", "Airflow", "dbt", "Celery", "Redis", "LLM", "Docker"],
+    mockup: "workforce",
+    flow: {
+      nodes: [
+        { id: "src", label: "Ops data", x: 60, y: 50, kind: "store" },
+        { id: "airflow", label: "Airflow ELT", x: 180, y: 50, kind: "step" },
+        { id: "dbt", label: "dbt models", x: 300, y: 50, kind: "step" },
+        { id: "pg", label: "Postgres", x: 420, y: 50, kind: "store" },
+        { id: "celery", label: "Celery + Redis", x: 420, y: 170, kind: "hub" },
+        { id: "llm", label: "Insight writer", x: 300, y: 170, kind: "agent" },
+        { id: "reports", label: "Reports", x: 180, y: 170, kind: "step" },
+        { id: "dash", label: "Manager view", x: 60, y: 170, kind: "io" },
+        { id: "tenant", label: "Tenant isolation", x: 420, y: 300, kind: "tool" },
+        { id: "sched", label: "Schedules", x: 240, y: 300, kind: "tool" },
+        { id: "email", label: "Email / PDF", x: 60, y: 300, kind: "io" },
+      ],
+      edges: [
+        ["src", "airflow"], ["airflow", "dbt"], ["dbt", "pg"], ["pg", "celery"], ["celery", "llm"], ["llm", "reports"],
+        ["reports", "dash"], ["tenant", "pg"], ["sched", "celery"], ["reports", "email"],
+      ],
+      routes: [
+        { path: ["src", "airflow", "dbt", "pg", "celery", "llm", "reports", "dash"], caption: "nightly: raw data → dbt models → report job → AI insight → dashboard" },
+        { path: ["sched", "celery", "llm", "reports", "email"], caption: "Monday 8am: weekly report lands in the manager's inbox" },
+      ],
+    },
+    uses: { PostgreSQL: ["pg", "tenant"], Airflow: ["airflow"], dbt: ["dbt"], Celery: ["celery", "sched"], Redis: ["celery"], LLM: ["llm"], Docker: ["celery"] },
   },
   {
     slug: "healthcare-rag",
+    year: "2024",
     category: "RAG · Healthcare",
-    title: "Healthcare Generative AI Assistant",
-    tagline: "Answers grounded in the documents, or no answer at all.",
-    problem:
-      "Staff needed answers buried in large sets of medical documents. A general chatbot that guesses confidently is not acceptable in healthcare.",
-    solution:
-      "A RAG assistant over indexed medical documents. Ingestion, chunking and embedding pipelines feed pgvector and Elasticsearch. Each query runs dense and sparse search together, then a reranker picks the passages the model is allowed to answer from. Retrieval quality and answer accuracy were tuned against a structured evaluation set, not by feel.",
+    title: "Healthcare AI Assistant",
+    tagline: "A generative AI assistant that answers medical questions from indexed documents, with sources for every claim.",
+    problem: "Staff needed answers buried in large sets of medical documents. A chatbot that guesses confidently is not acceptable in healthcare.",
+    built: [
+      "Ingestion, chunking and embedding into pgvector and Elasticsearch",
+      "Hybrid dense + sparse search, then a reranker picks what the model may cite",
+      "Accuracy tuned against a structured evaluation set, not by feel",
+    ],
     role: "Senior ML Engineer · retrieval pipeline, evaluation, API",
     tech: ["LangChain", "LlamaIndex", "pgvector", "Elasticsearch", "FastAPI", "Hugging Face"],
     stats: [
-      { value: "2", label: "Search modes fused (dense + sparse)" },
-      { value: "1", label: "Reranking pass before every answer" },
-      { value: "Eval", label: "Driven tuning loop" },
+      { value: "2", label: "Search modes fused" },
+      { value: "1", label: "Rerank before answering" },
+      { value: "Eval", label: "Driven tuning" },
     ],
-    visual: "rag",
+    mockup: "health",
+    flow: {
+      nodes: [
+        { id: "docs", label: "Medical docs", x: 75, y: 40, kind: "store" },
+        { id: "ingest", label: "Chunk + embed", x: 75, y: 125, kind: "step" },
+        { id: "pg", label: "pgvector", x: 75, y: 215, kind: "store" },
+        { id: "es", label: "Elasticsearch", x: 75, y: 305, kind: "store" },
+        { id: "user", label: "Question", x: 255, y: 40, kind: "io" },
+        { id: "hybrid", label: "Hybrid search", x: 255, y: 125, kind: "router" },
+        { id: "fuse", label: "Fuse results", x: 255, y: 260, kind: "step" },
+        { id: "rerank", label: "Reranker", x: 405, y: 260, kind: "agent" },
+        { id: "llm", label: "LLM + citations", x: 405, y: 150, kind: "agent" },
+        { id: "answer", label: "Grounded answer", x: 405, y: 45, kind: "io" },
+        { id: "evals", label: "Eval set", x: 255, y: 330, kind: "tool" },
+      ],
+      edges: [
+        ["docs", "ingest"], ["ingest", "pg"], ["ingest", "es"], ["user", "hybrid"], ["hybrid", "pg"], ["hybrid", "es"],
+        ["pg", "fuse"], ["es", "fuse"], ["fuse", "rerank"], ["rerank", "llm"], ["llm", "answer"], ["evals", "rerank"],
+      ],
+      routes: [
+        { path: ["user", "hybrid", "pg", "fuse", "rerank", "llm", "answer"], caption: "dense search finds passages by meaning" },
+        { path: ["user", "hybrid", "es", "fuse", "rerank", "llm", "answer"], caption: "sparse search catches exact drug names and codes" },
+        { path: ["docs", "ingest", "pg"], caption: "new documents are chunked and embedded on arrival" },
+      ],
+    },
+    uses: { LangChain: ["llm", "hybrid"], LlamaIndex: ["ingest"], pgvector: ["pg"], Elasticsearch: ["es"], FastAPI: ["answer"], "Hugging Face": ["rerank", "ingest"] },
+  },
+  {
+    slug: "relay",
+    year: "2024",
+    category: "Full-stack · Telephony",
+    title: "Relay",
+    tagline: "A browser-based softphone and outreach CRM I built to replace $20–30/month commercial dialers for international outreach.",
+    problem: "Commercial dialers charged per seat every month, and still didn't fit an international outreach workflow.",
+    built: [
+      "Calls straight from the browser with Twilio Voice, no desk phone or app",
+      "Contacts, call outcomes and follow-ups live in a lightweight CRM",
+      "Twilio webhooks log every call automatically",
+    ],
+    role: "Solo build · product, frontend, telephony",
+    tech: ["Next.js", "TypeScript", "Twilio", "WebRTC", "Webhooks"],
+    stats: [{ value: "$20–30", label: "Monthly dialer cost replaced" }],
+    mockup: "relay",
+    flow: {
+      nodes: [
+        { id: "ui", label: "Browser softphone", x: 75, y: 55, kind: "io" },
+        { id: "next", label: "Next.js API", x: 240, y: 55, kind: "hub" },
+        { id: "token", label: "Access token", x: 240, y: 150, kind: "tool" },
+        { id: "twilio", label: "Twilio Voice", x: 400, y: 55, kind: "router" },
+        { id: "pstn", label: "Phone network", x: 400, y: 170, kind: "step" },
+        { id: "callee", label: "Prospect", x: 400, y: 290, kind: "io" },
+        { id: "hooks", label: "Status webhooks", x: 240, y: 290, kind: "step" },
+        { id: "logs", label: "Call log", x: 75, y: 290, kind: "store" },
+        { id: "crm", label: "CRM pipeline", x: 75, y: 170, kind: "agent" },
+      ],
+      edges: [
+        ["ui", "next"], ["next", "token"], ["token", "twilio"], ["ui", "twilio"], ["twilio", "pstn"], ["pstn", "callee"],
+        ["twilio", "hooks"], ["hooks", "logs"], ["logs", "crm"], ["crm", "ui"],
+      ],
+      routes: [
+        { path: ["ui", "next", "token", "twilio", "pstn", "callee"], caption: "click to call: token from the API, WebRTC to Twilio, out to the phone network" },
+        { path: ["twilio", "hooks", "logs", "crm", "ui"], caption: "call ends: webhook logs it and updates the CRM" },
+      ],
+    },
+    uses: { "Next.js": ["next", "ui"], TypeScript: ["next", "ui", "crm"], Twilio: ["twilio", "token"], WebRTC: ["ui", "twilio"], Webhooks: ["hooks"] },
+  },
+  {
+    slug: "hp-archive",
+    year: "2023",
+    category: "Enterprise Data · Compliance",
+    title: "Enterprise Archive (HP)",
+    tagline: "An enterprise archival and reporting platform to securely move and preserve critical business data.",
+    problem: "Critical records had to leave ageing systems without losing a byte, and stay searchable and auditable afterwards.",
+    built: [
+      "Python/Flask platform with SQLAlchemy models for archived records",
+      "Validation and checksums on every migrated record",
+      "Retention rules, role-based access and an audit trail for compliance",
+    ],
+    role: "Python/Flask Engineer · platform, data model, compliance features",
+    tech: ["Python", "Flask", "SQLAlchemy", "Data Governance", "Compliance"],
+    mockup: "archive",
+    flow: {
+      nodes: [
+        { id: "legacy", label: "Legacy systems", x: 60, y: 55, kind: "store" },
+        { id: "extract", label: "Extraction jobs", x: 180, y: 55, kind: "step" },
+        { id: "validate", label: "Validate + checksum", x: 300, y: 55, kind: "step" },
+        { id: "archive", label: "Secure archive", x: 420, y: 55, kind: "store" },
+        { id: "models", label: "SQLAlchemy models", x: 300, y: 170, kind: "step" },
+        { id: "policy", label: "Retention policy", x: 420, y: 170, kind: "router" },
+        { id: "flask", label: "Flask API", x: 180, y: 250, kind: "hub" },
+        { id: "rbac", label: "Role access", x: 60, y: 170, kind: "tool" },
+        { id: "search", label: "Search & reports", x: 60, y: 320, kind: "io" },
+        { id: "audit", label: "Audit log", x: 420, y: 300, kind: "store" },
+      ],
+      edges: [
+        ["legacy", "extract"], ["extract", "validate"], ["validate", "archive"], ["validate", "models"], ["archive", "policy"],
+        ["models", "flask"], ["rbac", "flask"], ["flask", "search"], ["flask", "audit"], ["policy", "audit"],
+      ],
+      routes: [
+        { path: ["legacy", "extract", "validate", "archive", "policy", "audit"], caption: "migration: every record checksummed, archived and logged" },
+        { path: ["search", "flask", "models", "validate"], caption: "lookup: search goes through role checks to the archived record" },
+      ],
+    },
+    uses: { Python: ["extract", "validate"], Flask: ["flask"], SQLAlchemy: ["models"], "Data Governance": ["policy", "rbac"], Compliance: ["audit", "policy"] },
   },
   {
     slug: "hospitality",
+    year: "2021",
     category: "Classical ML · Hospitality",
-    title: "Hospitality Pricing & Guest Vision",
-    tagline: "Where it started: models that move revenue and cameras that save time.",
-    problem:
-      "Hospitality products priced rooms with static rules, recommended the same things to everyone, and processed guests by hand.",
-    solution:
-      "Recommendation systems with collaborative filtering, dynamic pricing with gradient boosting and time-series forecasting, and computer vision workflows for guest processing with OpenCV, YOLO and TensorFlow. All of it fed by Python and SQL ETL from MySQL and MongoDB, tuned with cross-validation and served through Flask and FastAPI.",
+    title: "Hospitality Pricing & Vision",
+    tagline: "Where it started: recommenders, dynamic pricing, forecasting, and cameras that speed up guest check-in.",
+    problem: "Hospitality products priced rooms with static rules, recommended the same things to everyone, and processed guests by hand.",
+    built: [
+      "Collaborative-filtering recommender and gradient-boosted dynamic pricing",
+      "Time-series demand forecasting feeding the price model",
+      "YOLO + OpenCV workflow for guest processing at check-in",
+    ],
     role: "AI/ML Engineer · modeling, CV pipeline, ETL, serving",
     tech: ["scikit-learn", "XGBoost", "Keras", "TensorFlow", "OpenCV", "YOLO", "Flask"],
     stats: [
       { value: "4", label: "Model types shipped" },
-      { value: "2", label: "Source databases unified" },
-      { value: "CV", label: "Guest processing automated" },
+      { value: "2", label: "Databases unified" },
     ],
-    visual: "hospitality",
+    mockup: "hospitality",
+    flow: {
+      nodes: [
+        { id: "pms", label: "MySQL bookings", x: 60, y: 50, kind: "store" },
+        { id: "mongo", label: "MongoDB guests", x: 60, y: 135, kind: "store" },
+        { id: "etl", label: "Python ETL", x: 180, y: 92, kind: "step" },
+        { id: "feat", label: "Features", x: 180, y: 190, kind: "step" },
+        { id: "rec", label: "Recommender", x: 300, y: 50, kind: "agent" },
+        { id: "price", label: "Dynamic pricing", x: 300, y: 135, kind: "agent" },
+        { id: "fc", label: "Forecast", x: 300, y: 220, kind: "agent" },
+        { id: "api", label: "Flask / FastAPI", x: 420, y: 135, kind: "hub" },
+        { id: "cam", label: "Lobby camera", x: 60, y: 305, kind: "io" },
+        { id: "yolo", label: "YOLO detect", x: 180, y: 305, kind: "agent" },
+        { id: "checkin", label: "Check-in", x: 300, y: 305, kind: "step" },
+      ],
+      edges: [
+        ["pms", "etl"], ["mongo", "etl"], ["etl", "feat"], ["feat", "rec"], ["feat", "price"], ["feat", "fc"], ["fc", "price"],
+        ["rec", "api"], ["price", "api"], ["cam", "yolo"], ["yolo", "checkin"], ["checkin", "api"],
+      ],
+      routes: [
+        { path: ["pms", "etl", "feat", "fc", "price", "api"], caption: "demand forecast feeds tomorrow's room price" },
+        { path: ["mongo", "etl", "feat", "rec", "api"], caption: "guest history powers personal recommendations" },
+        { path: ["cam", "yolo", "checkin", "api"], caption: "camera detects arriving guests to speed up check-in" },
+      ],
+    },
+    uses: { "scikit-learn": ["rec", "feat"], XGBoost: ["price"], Keras: ["fc"], TensorFlow: ["yolo"], OpenCV: ["cam", "yolo"], YOLO: ["yolo"], Flask: ["api"] },
   },
 ];
 

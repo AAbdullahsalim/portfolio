@@ -18,12 +18,12 @@ function Spotlight({ children, className = "" }: { children: React.ReactNode; cl
         setPos({ x: e.clientX - r.left, y: e.clientY - r.top });
       }}
       onPointerLeave={() => setPos({ x: -400, y: -400 })}
-      className={`group relative h-full overflow-hidden rounded-card border border-border bg-surface transition-colors hover:border-border-strong ${className}`}
+      className={`card group h-full overflow-hidden transition-transform duration-300 hover:-translate-y-1 ${className}`}
     >
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: `radial-gradient(320px circle at ${pos.x}px ${pos.y}px, #c8f03114, transparent 60%)` }}
+        style={{ background: `radial-gradient(320px circle at ${pos.x}px ${pos.y}px, color-mix(in oklab, var(--accent) 12%, transparent), transparent 60%)` }}
       />
       <div className="relative h-full">{children}</div>
     </div>
@@ -41,9 +41,9 @@ export function Services() {
               <Spotlight>
                 <div className={`flex h-full flex-col p-6 ${s.wide ? "md:flex-row md:items-end md:gap-10" : s.big ? "md:min-h-56" : "md:min-h-52"}`}>
                   <span className="font-mono text-xs text-subtle">{String(i + 1).padStart(2, "0")}</span>
-                  <h3 className={`mt-auto pt-8 font-semibold tracking-tight md:shrink-0 ${s.big ? "text-2xl" : "text-xl"}`}>{s.title}</h3>
+                  <h3 className={`display mt-auto pt-8 md:shrink-0 ${s.big ? "text-3xl" : "text-2xl"}`}>{s.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted md:max-w-xl">{s.text}</p>
-                  <p className="mt-4 font-mono text-[11px] text-accent/80 md:ml-auto md:shrink-0">{s.tag}</p>
+                  <p className="mt-4 font-mono text-[11px] text-accent md:ml-auto md:shrink-0">{s.tag}</p>
                 </div>
               </Spotlight>
             </Reveal>
@@ -51,7 +51,7 @@ export function Services() {
         </div>
 
         <Reveal delay={0.1}>
-          <div className="mt-3 rounded-card border border-dashed border-border-strong p-6 md:p-8">
+          <div className="card mt-6 p-6 md:p-8">
             <p className="mb-4 font-mono text-[11px] uppercase tracking-widest text-subtle">How I work, on every project</p>
             <ul className="grid gap-3 md:grid-cols-2">
               {promises.map((p) => (
@@ -86,12 +86,12 @@ export function Process() {
             </div>
             {process.map((s, i) => (
               <Reveal key={s.q} delay={i * 0.05}>
-                <li className="relative flex gap-5 rounded-card border border-border bg-surface/60 p-5 backdrop-blur">
+                <li className="card flex gap-5 p-5">
                   <span className="relative z-10 grid size-9 shrink-0 place-items-center rounded-full border border-border-strong bg-bg font-mono text-xs text-accent">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div>
-                    <h3 className="text-lg font-semibold">{s.q}</h3>
+                    <h3 className="display text-2xl">{s.q}</h3>
                     <p className="mt-1 text-[15px] leading-relaxed text-muted">{s.text}</p>
                   </div>
                 </li>
@@ -112,7 +112,7 @@ function Marquee({ items, reverse = false, duration = 45 }: { items: string[]; r
         style={{ ["--marquee-duration" as string]: `${duration}s`, animationDirection: reverse ? "reverse" : "normal" }}
       >
         {[...items, ...items].map((t, i) => (
-          <span key={i} className="whitespace-nowrap rounded-full border border-border bg-surface px-4 py-2 font-mono text-sm text-muted">
+          <span key={i} className="chip whitespace-nowrap !px-4 !py-2 !text-sm">
             {t}
           </span>
         ))}
@@ -153,10 +153,10 @@ export function Stack() {
         </div>
 
         <Reveal>
-          <div className="mt-12 flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-5">
+          <div className="card mt-12 flex flex-wrap items-center gap-3 p-5">
             <span className="mr-2 font-mono text-[11px] uppercase tracking-widest text-subtle">What I use daily</span>
             {daily.map((d) => (
-              <span key={d} className="rounded-lg bg-white/[0.05] px-3 py-1.5 text-sm font-medium">
+              <span key={d} className="chip !px-3 !py-1.5 !text-sm">
                 {d}
               </span>
             ))}
@@ -170,11 +170,11 @@ export function Stack() {
 export function Availability() {
   const items = Array.from({ length: 8 }, () => ["Open to work", "Available for projects"]).flat();
   return (
-    <div className="-rotate-1 border-y border-accent/30 bg-accent py-3 text-bg">
+    <div className="-rotate-1 border-y-2 border-fg bg-accent py-3 text-on-accent">
       <div className="flex overflow-hidden">
         <div className="flex shrink-0 animate-marquee items-center gap-6 pr-6" style={{ ["--marquee-duration" as string]: "30s" }}>
           {[...items, ...items].map((t, i) => (
-            <span key={i} className="flex items-center gap-6 whitespace-nowrap text-lg font-semibold uppercase tracking-tight">
+            <span key={i} className="display flex items-center gap-6 whitespace-nowrap text-2xl uppercase">
               {t}
               <span aria-hidden className="text-base">✦</span>
             </span>
@@ -189,16 +189,15 @@ export function Contact() {
   const [copied, setCopied] = useState(false);
   return (
     <section id="contact" className="relative scroll-mt-24 overflow-hidden py-28 md:py-40">
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[30rem] w-[50rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[140px]" />
-      <Container className="relative text-center">
+            <Container className="relative text-center">
         <Reveal>
           <span className="mb-4 flex items-center justify-center gap-2 font-mono text-xs uppercase tracking-widest text-accent">
             <span aria-hidden className="h-px w-6 bg-accent" />
             Contact
             <span aria-hidden className="h-px w-6 bg-accent" />
           </span>
-          <h2 className="mx-auto max-w-4xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
-            Got an AI idea stuck in <span className="font-serif font-normal italic text-gradient-move">demo mode?</span>
+          <h2 className="display mx-auto max-w-4xl text-5xl sm:text-6xl md:text-8xl">
+            Got an AI idea stuck in <span className="accent-word">demo mode?</span>
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-muted">
             Tell me what you&apos;re trying to automate. I&apos;ll tell you honestly whether AI is the right tool, and what it would take to ship it.
@@ -207,7 +206,7 @@ export function Contact() {
 
         <Reveal delay={0.1}>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href={`mailto:${profile.email}`} className="group inline-flex items-center gap-2 rounded-full bg-accent px-7 py-4 text-[15px] font-medium text-bg transition-transform hover:scale-[1.03] active:scale-95">
+            <a href={`mailto:${profile.email}`} className="btn btn-primary group">
               {profile.email}
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </a>
@@ -218,11 +217,11 @@ export function Contact() {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1500);
               }}
-              className="rounded-full border border-border-strong px-6 py-4 text-[15px] transition-colors hover:bg-white/5"
+              className="btn btn-ghost"
             >
               {copied ? "Copied ✓" : "Copy email"}
             </button>
-            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="rounded-full border border-border-strong px-6 py-4 text-[15px] transition-colors hover:bg-white/5">
+            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="btn btn-ghost">
               LinkedIn ↗
             </a>
           </div>
@@ -279,7 +278,7 @@ export function Footer() {
         </div>
       </Container>
       <div aria-hidden className="pointer-events-none select-none overflow-hidden">
-        <p className="translate-y-[18%] text-center font-serif text-[22vw] italic leading-none text-transparent [-webkit-text-stroke:1px_#ffffff14]">Taha Umar</p>
+        <p className="display translate-y-[18%] whitespace-nowrap text-center text-[19vw] leading-none text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--fg)_18%,transparent)]">Taha Umar</p>
       </div>
     </footer>
   );

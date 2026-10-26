@@ -11,9 +11,6 @@ const LABELS = ["router", "retriever", "pgvector", "reranker", "guardrails", "ev
 type Node = { x: number; y: number; vx: number; vy: number; r: number; label?: string; glow: number };
 type Pulse = { a: number; b: number; t: number; speed: number; color: string };
 
-const ACCENT = "200,240,49";
-const CYAN = "34,211,238";
-const VIOLET = "139,123,255";
 
 export default function AgentCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -29,6 +26,17 @@ export default function AgentCanvas() {
     let running = true;
     let lastSpawn = 0;
     const mouse = { x: -9999, y: -9999 };
+    // Colours come from the active style
+    let ACCENT = "215,255,59", LINE = "255,255,255", FG = "237,237,239";
+    const readColors = () => {
+      const cs = getComputedStyle(document.documentElement);
+      ACCENT = cs.getPropertyValue("--canvas-dot").trim() || ACCENT;
+      LINE = cs.getPropertyValue("--canvas-line").trim() || LINE;
+      FG = LINE;
+    };
+    readColors();
+    const mo = new MutationObserver(readColors);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     const LINK = () => Math.min(170, Math.max(120, w / 9));
 
     function init() {
@@ -66,7 +74,7 @@ export default function AgentCanvas() {
       const start = Math.floor(Math.random() * Math.min(LABELS.length, nodes.length));
       const n = neighbors(start);
       if (!n.length) return;
-      const colors = [ACCENT, CYAN, VIOLET];
+      const colors = [ACCENT, ACCENT, LINE];
       pulses.push({ a: start, b: n[Math.floor(Math.random() * n.length)], t: 0, speed: 0.012 + Math.random() * 0.012, color: colors[Math.floor(Math.random() * 3)] });
     }
 
@@ -99,7 +107,7 @@ export default function AgentCanvas() {
           const dx = a.x - b.x, dy = a.y - b.y;
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < L) {
-            ctx.strokeStyle = `rgba(255,255,255,${(1 - d / L) * 0.09})`;
+            ctx.strokeStyle = `rgba(${LINE},${(1 - d / L) * 0.14})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -166,12 +174,12 @@ export default function AgentCanvas() {
           ctx.arc(n.x, n.y, n.r + 7 * n.glow, 0, Math.PI * 2);
           ctx.fill();
         }
-        ctx.fillStyle = n.label ? `rgba(${ACCENT},${0.55 + n.glow * 0.45})` : `rgba(255,255,255,${0.28 + n.glow * 0.5})`;
+        ctx.fillStyle = n.label ? `rgba(${ACCENT},${0.7 + n.glow * 0.3})` : `rgba(${LINE},${0.3 + n.glow * 0.5})`;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
         ctx.fill();
         if (n.label) {
-          ctx.fillStyle = `rgba(237,237,239,${0.28 + n.glow * 0.6})`;
+          ctx.fillStyle = `rgba(${FG},${0.4 + n.glow * 0.6})`;
           ctx.fillText(n.label, n.x + 7, n.y + 3);
         }
       }
@@ -213,6 +221,7 @@ export default function AgentCanvas() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
+      mo.disconnect();
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
     };

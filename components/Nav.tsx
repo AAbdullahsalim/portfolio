@@ -3,13 +3,14 @@
 import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { profile } from "@/data/site";
+import { profile, projects } from "@/data/site";
+import { THEMES, useTheme } from "./theme";
 
 const links = [
   { href: "#about", label: "About" },
+  { href: "#experience", label: "Experience" },
+  { href: "#story", label: "Story" },
   { href: "#work", label: "Work" },
-  { href: "#process", label: "Process" },
-  { href: "#stack", label: "Stack" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -64,13 +65,13 @@ export default function Nav() {
               <Image src={profile.photo} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
               <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-elevated bg-accent" />
             </span>
-            <span className="hidden sm:inline">taha.umar</span>
+            <span className="hidden font-mono sm:inline">taha.umar</span>
           </a>
           <ul className="hidden items-center gap-1 md:flex">
             {links.map((l) => (
               <li key={l.href} className="relative">
                 {active === l.href.slice(1) && (
-                  <motion.span layoutId="nav-active" className="absolute inset-0 rounded-full bg-white/[0.07]" transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                  <motion.span layoutId="nav-active" className="absolute inset-0 rounded-full bg-fg/10" transition={{ type: "spring", stiffness: 380, damping: 30 }} />
                 )}
                 <a
                   href={l.href}
@@ -91,7 +92,7 @@ export default function Nav() {
               <kbd>⌘</kbd>
               <kbd>K</kbd>
             </button>
-            <a href="#contact" className="hidden rounded-full bg-fg px-4 py-1.5 text-sm font-medium text-bg transition-transform hover:scale-[1.03] active:scale-95 sm:inline-block">
+            <a href="#contact" className="hidden rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-on-accent transition-transform hover:scale-[1.03] active:scale-95 sm:inline-block">
               Let&apos;s talk
             </a>
             <button
@@ -139,6 +140,7 @@ export default function Nav() {
 type Cmd = { label: string; hint: string; run: () => void };
 
 function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { setTheme } = useTheme();
   const [q, setQ] = useState("");
   const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -155,7 +157,8 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   const cmds: Cmd[] = useMemo(
     () => [
       ...links.map((l) => ({ label: `Go to ${l.label}`, hint: "section", run: () => go(l.href) })),
-      { label: "Go to FinBot case study", hint: "project", run: () => go("#project-finbot") },
+      ...projects.map((p) => ({ label: `Project: ${p.title}`, hint: p.year, run: () => go(`#project-${p.slug}`) })),
+      ...THEMES.map((t) => ({ label: `Style: ${t.name}`, hint: t.blurb.toLowerCase(), run: () => { onClose(); setTheme(t.id); } })),
       {
         label: "Copy email address",
         hint: profile.email,
@@ -171,7 +174,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
       { label: "Send an email", hint: "mailto", run: () => (window.location.href = `mailto:${profile.email}`) },
       { label: "Open LinkedIn", hint: "linkedin.com/in/tahaumar", run: () => window.open(profile.linkedin, "_blank") },
     ],
-    [go, onClose],
+    [go, onClose, setTheme],
   );
 
   const filtered = cmds.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()));
@@ -238,7 +241,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
                     type="button"
                     onMouseEnter={() => setI(idx)}
                     onClick={c.run}
-                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm ${idx === i ? "bg-white/[0.07] text-fg" : "text-muted"}`}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm ${idx === i ? "bg-fg/10 text-fg" : "text-muted"}`}
                   >
                     <span>{copied && c.label.startsWith("Copy") ? "Copied ✓" : c.label}</span>
                     <span className="font-mono text-[11px] text-subtle">{c.hint}</span>

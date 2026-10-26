@@ -2,6 +2,7 @@
 
 import { motion, useInView, animate } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "./theme";
 
 export function Reveal({
   children,
@@ -27,15 +28,56 @@ export function Reveal({
   );
 }
 
-export function Eyebrow({ children, tone = "accent" }: { children: React.ReactNode; tone?: "accent" | "accent-2" }) {
-  const color = tone === "accent" ? "text-accent" : "text-accent-2";
-  const bar = tone === "accent" ? "bg-accent" : "bg-accent-2";
+export function Eyebrow({ children }: { children: React.ReactNode; tone?: string }) {
   return (
-    <span className={`mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest ${color}`}>
-      <span aria-hidden className={`h-px w-6 ${bar}`} />
+    <span className="eyebrow mb-4 flex w-fit items-center gap-2">
+      <span aria-hidden className="h-px w-6 bg-current" />
       {children}
     </span>
   );
+}
+
+/** A little hand-made mark under headings; changes with the style */
+export function Flourish() {
+  const { theme } = useTheme();
+  if (theme === "sketch")
+    return (
+      <svg viewBox="0 0 220 20" className="-mt-2 mb-2 h-4 w-48" aria-hidden>
+        <path d="M4 14 C60 4 120 4 216 10 M30 18 C90 10 150 12 200 15" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" filter="url(#rough)" />
+      </svg>
+    );
+  if (theme === "graffiti")
+    return (
+      <svg viewBox="0 0 220 40" className="-mt-1 mb-2 h-8 w-52" aria-hidden>
+        <path d="M0 6 H220" stroke="var(--accent)" strokeWidth="6" />
+        {[18, 52, 96, 140, 188].map((x, i) => (
+          <path key={x} d={`M${x} 6 v${10 + (i % 3) * 9}`} stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" />
+        ))}
+      </svg>
+    );
+  if (theme === "pop")
+    return (
+      <div aria-hidden className="mb-3 flex gap-1.5">
+        {["var(--accent)", "var(--accent-2)", "var(--accent-3)"].map((c) => (
+          <span key={c} className="size-4 rounded-full border-2 border-black" style={{ background: c }} />
+        ))}
+      </div>
+    );
+  if (theme === "maximal")
+    return (
+      <svg viewBox="0 0 240 16" className="mb-3 h-4 w-60" aria-hidden>
+        <path d="M0 8 Q10 0 20 8 T40 8 T60 8 T80 8 T100 8 T120 8 T140 8 T160 8 T180 8 T200 8 T220 8 T240 8" fill="none" stroke="var(--accent-2)" strokeWidth="3" />
+      </svg>
+    );
+  if (theme === "vector")
+    return (
+      <div aria-hidden className="mb-3 flex items-center gap-1.5">
+        <span className="h-2 w-10 rounded-full bg-accent" />
+        <span className="size-2 rounded-full bg-accent-2" />
+        <span className="size-2 rounded-full bg-accent-4" />
+      </div>
+    );
+  return null;
 }
 
 export function SectionHeader({
@@ -52,9 +94,10 @@ export function SectionHeader({
   return (
     <Reveal>
       <Eyebrow>{eyebrow}</Eyebrow>
-      <h2 className="mb-4 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
-        {title} <span className="font-serif text-[1.08em] font-normal italic text-gradient">{accent}</span>
+      <h2 className="display mb-4 text-4xl sm:text-5xl md:text-6xl">
+        {title} <span className="accent-word text-[1.06em]">{accent}</span>
       </h2>
+      <Flourish />
       {sub && <p className="max-w-2xl text-muted">{sub}</p>}
     </Reveal>
   );

@@ -33,7 +33,7 @@ function TraceTyper() {
   }, [chars, current.text.length]);
 
   return (
-    <div className="mx-auto mt-7 flex h-9 w-fit max-w-full items-center gap-2 overflow-hidden rounded-full border border-border bg-black/40 px-4 font-mono text-[11px] text-muted backdrop-blur sm:text-xs">
+    <div className="card mx-auto mt-7 flex h-9 w-fit max-w-full items-center gap-2 overflow-hidden !rounded-full px-4 font-mono text-[11px] text-muted sm:text-xs">
       <span className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-accent">{current.step}</span>
       <span className="truncate">
         {current.text.slice(0, chars)}
@@ -69,12 +69,11 @@ export default function Hero() {
         <motion.section
           id="home"
           style={{ scale, opacity, filter: blur }}
-          className="relative flex h-[100svh] flex-col items-center justify-center overflow-hidden bg-bg"
+          className="page-surface relative flex h-[100svh] flex-col items-center justify-center overflow-hidden"
         >
-          <div aria-hidden className="bg-grid absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,black,transparent)]" />
+          <div aria-hidden className="grid-lines absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,black,transparent)]" />
           <AgentCanvas />
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_42%_38%_at_50%_50%,#09090bf2_0%,#09090bb3_45%,transparent_80%)]" />
-          <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_44%_40%_at_50%_50%,var(--bg)_0%,color-mix(in_oklab,var(--bg)_75%,transparent)_50%,transparent_82%)]" />
 
           <div className="relative z-10 w-full max-w-3xl px-6 text-center">
             <motion.div
@@ -84,7 +83,7 @@ export default function Hero() {
               className="mx-auto mb-6 w-fit"
             >
               <div className="relative">
-                <div className="absolute -inset-1 animate-[spin_8s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,var(--color-accent),transparent_30%,var(--color-accent-3)_55%,transparent_75%,var(--color-accent-2))] opacity-80" />
+                <div className="absolute -inset-1.5 animate-[spin_24s_linear_infinite] rounded-full border-2 border-dashed border-accent" />
                 <Image src={profile.photo} alt={profile.name} width={96} height={96} priority className="relative size-20 rounded-full border-4 border-bg object-cover sm:size-24" />
                 <span className="absolute bottom-1 right-1 flex size-4">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" />
@@ -102,11 +101,11 @@ export default function Hero() {
               Hi, I&apos;m {profile.firstName} · {profile.role}
             </motion.p>
 
-            <h1 className="text-[2.6rem] font-semibold leading-[1.02] tracking-tight sm:text-6xl md:text-7xl">
+            <h1 className="display text-[2.8rem] sm:text-6xl md:text-7xl">
               {words.map((w, i) => (
                 <motion.span
                   key={w + i}
-                  className="mr-[0.25em] inline-block"
+                  className="hero-word mr-[0.25em] inline-block"
                   initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
@@ -116,7 +115,7 @@ export default function Hero() {
               ))}
               <br />
               <motion.span
-                className="inline-block font-serif text-[1.02em] font-normal italic text-gradient-move sm:whitespace-nowrap"
+                className="accent-word mt-2 inline-block text-balance text-[1.02em]"
                 initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 0.9, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -135,11 +134,11 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
             >
-              <a href="#work" className="group inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3.5 text-[15px] font-medium text-bg transition-transform hover:scale-[1.03] active:scale-95">
+              <a href="#work" className="btn btn-primary group">
                 View my work
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </a>
-              <a href="#contact" className="inline-flex items-center rounded-full border border-border-strong bg-white/[0.03] px-7 py-3.5 text-[15px] font-medium backdrop-blur transition-colors hover:bg-white/[0.07]">
+              <a href="#contact" className="btn btn-ghost">
                 Start a project
               </a>
             </motion.div>
