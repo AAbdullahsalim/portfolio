@@ -3,6 +3,7 @@ import Backdrop from "@/components/Backdrop";
 import Experience from "@/components/Experience";
 import Hero, { HeroStage } from "@/components/Hero";
 import Nav from "@/components/Nav";
+import SectionRail from "@/components/SectionRail";
 import { Availability, Contact, Footer, Process, Services, Stack } from "@/components/Sections";
 import Story from "@/components/Story";
 import { StyleWheel } from "@/components/theme";
@@ -28,10 +29,11 @@ export default function Home() {
         Skip to content
       </a>
       <Nav />
+      <SectionRail />
       <StyleWheel />
       <main id="main">
         {/* The hero stays pinned; everything below slides up over it */}
-        <div className="relative">
+        <div id="top" data-section="top" className="relative scroll-mt-0">
           <HeroStage>
             <div className="v-studio h-full"><Hero /></div>
             <div className="v-pop h-full"><PopHero /></div>

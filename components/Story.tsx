@@ -1,9 +1,9 @@
 "use client";
 
-import { useMotionValueEvent, useScroll } from "motion/react";
-import { useCallback, useEffect, useRef } from "react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { story } from "@/data/site";
-import { useTheme, type ThemeId } from "./theme";
+import { useTheme, type ThemeId, scrollToSection } from "./theme";
 
 /* Line art on a 1440×900 canvas, horizon at y=640. */
 const HORIZON = "M0 640 H1440";
@@ -88,29 +88,27 @@ const PALETTES: Record<ThemeId, Palette> = {
 };
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
-const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const mix = (a: string, b: string, t: number) => {
-  const [x, y] = [hex(a), hex(b)];
-  return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`;
-};
-
 const N = story.length;
-// Where each scene sits horizontally, so narrow screens can pan to it
 const FOCUS: Record<string, number> = { laptop: 860, camera: 930, chart: 950, pulse: 900, pipeline: 940, network: 950, door: 1170 };
+
+const CHAPTER_YEARS = ["2016", "2020", "2021", "2023", "2024", "2025", "Next"];
+const CHAPTER_DURATION = 5000; // 5 seconds per chapter
 
 export default function Story() {
   const { theme } = useTheme();
-  const pal = PALETTES[theme];
-  const section = useRef<HTMLElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
+  const pal = PALETTES[theme] || PALETTES.studio;
+  const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const pencil = useRef<SVGGElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const meRefs = useRef<(SVGPathElement | null)[]>([]);
   const sceneRefs = useRef<(SVGPathElement | null)[][]>(story.map(() => []));
   const groupRefs = useRef<(SVGGElement | null)[]>([]);
-  const textRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const markerRef = useRef<HTMLSpanElement>(null);
-  const { scrollYProgress } = useScroll({ target: section, offset: ["start start", "end end"] });
+
+  const [activeChapter, setActiveChapter] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const isInView = useInView(sectionRef, { amount: 0.3 });
 
   const drawSeq = (paths: (SVGPathElement | null)[], prog: number) => {
     let tip: DOMPoint | null = null;
@@ -126,153 +124,296 @@ export default function Story() {
     return tip as DOMPoint | null;
   };
 
-  const update = useCallback(
-    (p: number) => {
-      const t = p * N;
-      let tip: DOMPoint | null = null;
+  // Render the current scene artwork based on active chapter and sub-chapter progress
+  const renderDrawing = useCallback(
+    (ch: number, frac: number) => {
+      // Me is drawn fully or during chapter 0
+      const meProg = ch === 0 ? clamp(frac * 2) : 1;
+      let tip = drawSeq(meRefs.current, meProg);
 
-      // I draw myself in the first part of chapter one
-      const meTip = drawSeq(meRefs.current, clamp(t / 0.4));
-      if (meTip) tip = meTip;
-
+      // Hide all scenes except active and previous
       story.forEach((_, i) => {
-        const local = t - i;
-        const sceneTip = drawSeq(sceneRefs.current[i], clamp((local - (i === 0 ? 0.35 : 0.05)) / 0.55));
-        if (sceneTip) tip = sceneTip;
         const g = groupRefs.current[i];
-        if (g) g.style.opacity = String(i === N - 1 ? 1 : 1 - clamp((local - 0.92) / 0.1));
-        const tx = textRefs.current[i];
-        if (tx) {
-          const inn = clamp((local + 0.05) / 0.25);
-          const out = i === N - 1 ? 1 : 1 - clamp((local - 0.82) / 0.15);
-          const o = Math.min(inn, out);
-          tx.style.opacity = String(o);
-          tx.style.transform = `translateY(${(1 - inn) * 24}px)`;
-          tx.style.pointerEvents = o > 0.5 ? "auto" : "none";
+        if (!g) return;
+        if (i < ch) {
+          g.style.opacity = "0.2";
+          drawSeq(sceneRefs.current[i], 1);
+        } else if (i === ch) {
+          g.style.opacity = "1";
+          const sceneTip = drawSeq(sceneRefs.current[i], clamp(frac * 1.5));
+          if (sceneTip) tip = sceneTip;
+        } else {
+          g.style.opacity = "0";
+          drawSeq(sceneRefs.current[i], 0);
         }
       });
 
-      // Background colour drifts between chapters
-      const c = Math.min(N - 1, Math.max(0, t - 0.5));
-      const a = Math.floor(c), b = Math.min(N - 1, a + 1);
-      if (stage.current) stage.current.style.backgroundColor = mix(pal.bgs[a], pal.bgs[b], clamp((c - a) * 2 - 0.5));
-      const ch = Math.min(N - 1, Math.floor(t));
-      if (markerRef.current) markerRef.current.textContent = `${String(ch).padStart(2, "0")}  ${story[ch].place}`;
-
-      // On narrow screens the drawing is wider than the view: follow the pencil
+      // Camera panning on smaller screens
       const svg = svgRef.current;
       if (svg) {
         const visible = Math.min(1440, (900 * svg.clientWidth) / Math.max(1, svg.clientHeight));
         let x = 0;
         if (visible < 1440) {
-          // Start on me, then glide to each scene as its chapter begins
-          const ci = Math.min(N - 1, Math.max(0, Math.floor(t)));
-          const here = FOCUS[story[ci].scene];
-          const next = FOCUS[story[Math.min(N - 1, ci + 1)].scene];
-          let focus = here + (next - here) * clamp((t - ci - 0.88) / 0.2);
-          if (ci === 0) focus = 330 + (focus - 330) * clamp((t - 0.3) / 0.15);
-          x = Math.max(0, Math.min(1440 - visible, focus - visible / 2));
+          const here = FOCUS[story[ch].scene] || 900;
+          x = Math.max(0, Math.min(1440 - visible, here - visible / 2));
         }
         svg.setAttribute("viewBox", `${x.toFixed(1)} 0 1440 900`);
       }
 
+      // Position pencil tip
       if (pencil.current) {
         if (tip) {
           const pt = tip as DOMPoint;
           pencil.current.style.opacity = "1";
           pencil.current.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
-        } else pencil.current.style.opacity = "0";
+        } else {
+          pencil.current.style.opacity = "0";
+        }
       }
     },
-    [pal],
+    [],
   );
 
-  useMotionValueEvent(scrollYProgress, "change", update);
+  // Playback timer loop
   useEffect(() => {
-    update(scrollYProgress.get());
-  }, [update, scrollYProgress, theme]);
+    if (!isInView || !isPlaying) return;
+
+    const start = performance.now();
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const p = Math.min(1, elapsed / CHAPTER_DURATION);
+      setProgress(p);
+      renderDrawing(activeChapter, p);
+
+      if (p >= 1) {
+        setActiveChapter((cur) => (cur + 1) % N);
+      } else {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isInView, isPlaying, activeChapter, renderDrawing]);
+
+  // When manually changing chapters
+  const selectChapter = (idx: number) => {
+    setActiveChapter(idx);
+    setProgress(0);
+    renderDrawing(idx, 0.95);
+  };
+
+  const current = story[activeChapter];
 
   return (
-    <section ref={section} id="story" data-section="story" className="relative" style={{ height: `${N * 110 + 40}vh` }} aria-label="How I got here">
-      <div ref={stage} className={`story-stage sticky top-0 h-[100svh] overflow-hidden`} style={{ color: pal.text, backgroundColor: pal.bgs[0] }}>
-        {/* Chapter text */}
-        {story.map((c, i) => (
-          <div
-            key={c.place}
-            ref={(el) => {
-              textRefs.current[i] = el;
-            }}
-            className="story-text absolute inset-x-0 top-24 mx-auto grid max-w-6xl gap-6 px-6 opacity-0 sm:px-8 md:top-28 md:grid-cols-2"
-          >
-            <div>
-              <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] opacity-70">
-                {String(i).padStart(2, "0")} · {c.place}
-              </p>
-              <h2 className="display text-3xl sm:text-5xl md:text-6xl" style={{ color: pal.text, WebkitTextStroke: "0" }}>
-                {c.title[0]}
-                <br />
-                {c.title[1]}
-              </h2>
-            </div>
-            <div className="md:pt-9">
-              <p className="max-w-md text-base leading-relaxed opacity-85 sm:text-lg">{c.text}</p>
-              {i === N - 1 && (
-                <a href="#contact" className="btn btn-primary mt-6">
-                  Start a project →
-                </a>
-              )}
-            </div>
+    <section
+      ref={sectionRef}
+      id="story"
+      data-section="story"
+      className="relative scroll-mt-24 my-8 md:my-16"
+      aria-label="How I got here"
+    >
+      <div
+        ref={stageRef}
+        className="story-stage relative mx-4 sm:mx-6 lg:mx-8 min-h-[580px] lg:h-[80vh] lg:min-h-[640px] lg:max-h-[780px] overflow-hidden rounded-3xl border border-border shadow-2xl transition-colors duration-700 flex flex-col justify-between"
+        style={{ color: pal.text, backgroundColor: pal.bgs[activeChapter % pal.bgs.length] }}
+      >
+        {/* Top Header Bar inside the stage */}
+        <div className="relative z-20 flex items-center justify-between px-6 pt-6 sm:px-10">
+          <div className="flex items-center gap-3">
+            <span className="flex size-2 rounded-full bg-accent animate-ping" />
+            <span className="font-mono text-xs uppercase tracking-[0.25em] opacity-80">
+              Interactive Story · Chapter {String(activeChapter + 1).padStart(2, "0")}/{String(N).padStart(2, "0")}
+            </span>
           </div>
-        ))}
 
-        {/* Line drawing */}
-        <svg ref={svgRef} viewBox="0 0 1440 900" preserveAspectRatio="xMinYMax slice" className="story-art absolute inset-x-0 bottom-0 h-[58%] w-full md:h-full" aria-hidden>
-          <g fill="none" stroke={pal.line} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter={theme === "sketch" ? "url(#rough)" : undefined}>
-            <path d={HORIZON} />
-            <g>
-              {ME.map((d, j) => (
-                <path
-                  key={j}
-                  d={d}
-                  ref={(el) => {
-                    meRefs.current[j] = el;
-                  }}
-                />
-              ))}
-            </g>
-            {story.map((c, i) => (
-              <g
-                key={c.scene}
-                ref={(el) => {
-                  groupRefs.current[i] = el;
-                }}
-              >
-                {SCENES[c.scene].map((d, j) => (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/25 px-3 py-1 font-mono text-xs backdrop-blur-md transition-all hover:bg-black/40"
+              aria-label={isPlaying ? "Pause timeline" : "Play timeline"}
+            >
+              <span>{isPlaying ? "⏸ Pause" : "▶ Play"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("#work")}
+              className="hidden sm:inline-flex rounded-full border border-white/20 bg-black/25 px-3 py-1 font-mono text-xs text-accent backdrop-blur-md transition-all hover:bg-black/40"
+            >
+              Skip to Work ↓
+            </button>
+          </div>
+        </div>
+
+        {/* Chapter Story Text Overlay */}
+        <div className="relative z-10 px-6 sm:px-10 max-w-5xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current.place}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="grid gap-4 md:grid-cols-2 md:gap-8 items-start"
+            >
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent font-semibold mb-2">
+                  {current.place}
+                </p>
+                <h2 className="display text-3xl sm:text-4xl md:text-5xl font-bold leading-tight" style={{ color: pal.text }}>
+                  {current.title[0]}
+                  <br />
+                  {current.title[1]}
+                </h2>
+              </div>
+              <div className="md:pt-4">
+                <p className="text-base sm:text-lg leading-relaxed opacity-90 max-w-md">
+                  {current.text}
+                </p>
+                {activeChapter === N - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("#contact")}
+                    className="btn btn-primary mt-4 inline-flex"
+                  >
+                    Start a project →
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Live Line drawing SVG */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <svg
+            ref={svgRef}
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMinYMax slice"
+            className="story-art absolute inset-x-0 bottom-0 h-[65%] w-full md:h-full"
+            aria-hidden
+          >
+            <g
+              fill="none"
+              stroke={pal.line}
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter={theme === "sketch" ? "url(#rough)" : undefined}
+            >
+              <path d={HORIZON} />
+              {/* Me */}
+              <g>
+                {ME.map((d, j) => (
                   <path
                     key={j}
                     d={d}
                     ref={(el) => {
-                      sceneRefs.current[i][j] = el;
+                      meRefs.current[j] = el;
                     }}
                   />
                 ))}
               </g>
-            ))}
-          </g>
-          {/* The pencil that does the drawing */}
-          <g ref={pencil} style={{ opacity: 0, transition: "opacity .2s" }}>
-            <g transform="rotate(-35)">
-              <path d="M0 0 L10 -22 H22 L12 0 Z" fill={pal.line} opacity="0.9" />
-              <path d="M10 -22 L22 -22 L44 -110 L32 -110 Z" fill={pal.bgs[0]} stroke={pal.line} strokeWidth="3" strokeLinejoin="round" />
-              <path d="M32 -110 L44 -110 L48 -124 L36 -124 Z" fill={pal.line} />
+              {/* All Scenes */}
+              {story.map((c, i) => (
+                <g
+                  key={c.scene}
+                  ref={(el) => {
+                    groupRefs.current[i] = el;
+                  }}
+                  className="transition-opacity duration-500"
+                >
+                  {SCENES[c.scene].map((d, j) => (
+                    <path
+                      key={j}
+                      d={d}
+                      ref={(el) => {
+                        sceneRefs.current[i][j] = el;
+                      }}
+                    />
+                  ))}
+                </g>
+              ))}
             </g>
-          </g>
-        </svg>
+            {/* The Pencil SVG */}
+            <g ref={pencil} style={{ opacity: 0, transition: "opacity .2s" }}>
+              <g transform="rotate(-35)">
+                <path d="M0 0 L10 -22 H22 L12 0 Z" fill={pal.line} opacity="0.9" />
+                <path d="M10 -22 L22 -22 L44 -110 L32 -110 Z" fill={pal.bgs[0]} stroke={pal.line} strokeWidth="3" strokeLinejoin="round" />
+                <path d="M32 -110 L44 -110 L48 -124 L36 -124 Z" fill={pal.line} />
+              </g>
+            </g>
+          </svg>
+        </div>
 
-        {/* Footer marks */}
-        <div className="absolute inset-x-0 bottom-5 mx-auto flex max-w-6xl items-center justify-between px-6 font-mono text-[11px] uppercase tracking-widest opacity-70 sm:px-8">
-          <span ref={markerRef} className="whitespace-pre" />
-          <span>Keep going ↓</span>
+        {/* Bottom Interactive Timeline Rail */}
+        <div className="relative z-20 px-4 sm:px-8 pb-5 pt-3 bg-gradient-to-t from-black/60 to-transparent">
+          {/* Segmented Progress Bars */}
+          <div className="mb-3 flex items-center gap-1.5 w-full">
+            {story.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => selectChapter(i)}
+                className="relative h-1.5 flex-1 rounded-full bg-white/20 overflow-hidden transition-all hover:h-2.5"
+                title={`Jump to Chapter ${i + 1}`}
+                aria-label={`Jump to Chapter ${i + 1}`}
+              >
+                <div
+                  className="h-full bg-accent transition-all"
+                  style={{
+                    width: i < activeChapter ? "100%" : i === activeChapter ? `${progress * 100}%` : "0%",
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Timeline Chapter Pills */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 max-w-full">
+              {story.map((c, i) => {
+                const isActive = activeChapter === i;
+                return (
+                  <button
+                    key={c.place}
+                    type="button"
+                    onClick={() => selectChapter(i)}
+                    className={`rounded-full px-3 py-1 font-mono text-[11px] sm:text-xs transition-all whitespace-nowrap ${
+                      isActive
+                        ? "bg-accent text-black font-bold shadow-md scale-105"
+                        : "bg-white/10 text-white/80 hover:bg-white/25 hover:text-white"
+                    }`}
+                  >
+                    {CHAPTER_YEARS[i] || `Ch.${i + 1}`}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Step navigation arrows */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => selectChapter((activeChapter - 1 + N) % N)}
+                className="size-8 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-sm font-mono transition-transform active:scale-90"
+                aria-label="Previous chapter"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={() => selectChapter((activeChapter + 1) % N)}
+                className="size-8 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-sm font-mono transition-transform active:scale-90"
+                aria-label="Next chapter"
+              >
+                →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,228 +1,322 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { projects, type Project } from "@/data/site";
 import FlowDiagram from "./Flow";
 import GraphView from "./GraphView";
 import { ProductScreen, URLS } from "./Screens";
 import { Container, SectionHeader } from "./ui";
+import { scrollToSection } from "./theme";
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const INTRO = 130; // vh of scrolling for the zoom-in
-const STEP = 70; // vh of scrolling per walkthrough step
-const clamp = (v: number) => Math.max(0, Math.min(1, v));
-const seg = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
-const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+const STEP_DURATION = 4500; // 4.5s per step
 
-type Geo = { W: number; H: number; desktop: boolean; fw: number; fh: number; start: number; s: number; x: number; y: number };
-
-function measure(): Geo {
-  const W = window.innerWidth, H = window.innerHeight;
-  const desktop = W >= 1024;
-  if (desktop) {
-    // Frame fills the screen when zoomed in, then settles top-left
-    const s = Math.min((W * 0.58 - 24) / W, (H - 300) / H);
-    return { W, H, desktop, fw: W, fh: H, start: 0.62, s, x: -(W - W * s) / 2 + 24, y: 88 - (H - H * s) / 2 };
-  }
-  const fh = Math.min(H * 0.5, W * 0.62 + 36);
-  return { W, H, desktop, fw: W, fh, start: 0.86, s: 1, x: 0, y: 72 - (H - fh) / 2 };
-}
-
-function ProjectScrolly({ p, i }: { p: Project; i: number }) {
+function ProjectPlayer({ p, i }: { p: Project; i: number }) {
   const ref = useRef<HTMLElement>(null);
   const S = p.steps.length;
-  const totalVh = INTRO + S * STEP + 100;
-  const dist = totalVh - 100;
-  const [geo, setGeo] = useState<Geo | null>(null);
-  const g = useRef<Geo | null>(null);
-  const [step, setStep] = useState(-1);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const [step, setStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [mobileTab, setMobileTab] = useState<"screen" | "workflow" | "graph">("screen");
+  const isInView = useInView(ref, { amount: 0.25 });
 
-  useEffect(() => {
-    const on = () => {
-      g.current = measure();
-      setGeo(g.current);
-    };
-    on();
-    window.addEventListener("resize", on);
-    return () => window.removeEventListener("resize", on);
-  }, []);
-
-  const v = useTransform(scrollYProgress, (x) => x * dist);
-  const zoom = (x: number) => ease(seg(x, 0, 55));
-  const settle = (x: number) => ease(seg(x, 72, 110));
-  const scale = useTransform(v, (x) => {
-    const G = g.current;
-    if (!G) return 1;
-    return mix(mix(G.start, 1, zoom(x)), G.s, settle(x));
-  });
-  const tx = useTransform(v, (x) => (g.current ? settle(x) * g.current.x : 0));
-  const ty = useTransform(v, (x) => (g.current ? settle(x) * g.current.y : 0));
-  const radius = useTransform(v, (x) => mix(mix(22, 0, zoom(x)), 14, settle(x)));
-  const introOpacity = useTransform(v, (x) => 1 - seg(x, 2, 32));
-  const introY = useTransform(v, (x) => seg(x, 2, 32) * -30);
-  const panelOpacity = useTransform(v, (x) => seg(x, 95, 122));
-  const panelX = useTransform(v, (x) => (1 - seg(x, 95, 122)) * 60);
-  const hintOpacity = useTransform(v, (x) => seg(x, 40, 55) * (1 - seg(x, 62, 72)));
-
-  useMotionValueEvent(v, "change", (x) => {
-    const k = x < INTRO - 10 ? -1 : Math.min(S - 1, Math.floor((x - (INTRO - 10)) / STEP));
-    setStep((cur) => (cur === k ? cur : k));
-  });
-
-  const active = step >= 0 ? p.steps[step] : null;
+  const nextSlug = i < projects.length - 1 ? `project-${projects[i + 1].slug}` : "services";
+  const active = p.steps[step];
   const dark = p.mockup === "relay";
 
-  // Positions of the text and diagram areas once the frame has settled
-  const textTop = geo ? (geo.desktop ? 88 + geo.H * geo.s + 22 : 72 + geo.fh + 14) : 0;
-  const frameW = geo ? geo.W * geo.s : 0;
+  // Auto-advance step timer
+  useEffect(() => {
+    if (!isInView || !isPlaying) return;
+
+    const start = performance.now();
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const frac = Math.min(1, elapsed / STEP_DURATION);
+      setProgress(frac);
+
+      if (frac >= 1) {
+        setStep((cur) => (cur + 1) % S);
+      } else {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isInView, isPlaying, step, S]);
+
+  const jumpToStep = (idx: number) => {
+    setStep(idx);
+    setProgress(0);
+  };
 
   return (
-    <section ref={ref} id={`project-${p.slug}`} data-section={`project-${p.slug}`} className="relative" style={{ height: `${totalVh}vh` }} aria-label={p.title}>
-      <div className="sticky top-0 h-screen overflow-hidden">
-        {/* Intro text under the window */}
-        <motion.div style={{ opacity: introOpacity, y: introY }} className="pointer-events-none absolute inset-x-0 bottom-[5vh] z-0 mx-auto max-w-6xl px-6 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow mb-2 !text-[11px]">
-                {pad(i + 1)} / {pad(projects.length)} · {p.category} · {p.year}
-              </p>
-              <h3 className="display text-5xl sm:text-7xl">{p.title}</h3>
+    <article
+      ref={ref}
+      id={`project-${p.slug}`}
+      data-section={`project-${p.slug}`}
+      className="relative scroll-mt-24 my-8 md:my-14 mx-4 sm:mx-6 lg:mx-8 card overflow-hidden flex flex-col justify-between min-h-[680px] lg:h-[86vh] lg:min-h-[720px] lg:max-h-[880px] shadow-2xl border border-border"
+      aria-label={p.title}
+    >
+      {/* Top Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface/80 px-4 py-3 sm:px-6 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <span className="display text-2xl font-bold text-accent sm:text-3xl leading-none">
+            {pad(i + 1)}
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-base sm:text-lg text-fg">{p.title}</h3>
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 font-mono text-[10px] text-accent font-semibold">
+                {p.category}
+              </span>
             </div>
-            <p className="max-w-md text-[15px] leading-snug text-muted">{p.tagline}</p>
+            <p className="hidden sm:block text-xs text-muted line-clamp-1">{p.tagline}</p>
           </div>
-        </motion.div>
+        </div>
 
-        {/* The website window */}
-        {geo && (
-          <motion.div
-            className="card absolute left-0 top-0 z-10 flex origin-center flex-col overflow-hidden will-change-transform"
-            style={{
-              width: geo.fw,
-              height: geo.fh,
-              top: (geo.H - geo.fh) / 2,
-              scale,
-              x: tx,
-              y: ty,
-              borderRadius: radius,
-            }}
-          >
-            <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface px-3">
-              <span className="flex gap-1.5">
-                <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-                <span className="size-2.5 rounded-full bg-[#febc2e]" />
-                <span className="size-2.5 rounded-full bg-[#28c840]" />
+        <div className="flex items-center gap-2">
+          {/* Tech tags on large screens */}
+          <div className="hidden xl:flex items-center gap-1.5 mr-2">
+            {p.tech.slice(0, 4).map((t) => (
+              <span key={t} className="chip !py-0.5 !text-[10px]">
+                {t}
               </span>
-              <span className="mx-auto flex items-center gap-1.5 rounded-md bg-elevated px-3 py-0.5 font-mono text-[11px] text-muted">
-                <span aria-hidden>🔒</span>
-                {URLS[p.mockup]}
-              </span>
-            </div>
-            <div className={`min-h-0 flex-1 ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
-              <ProductScreen project={p} region={active?.region ?? null} step={step} />
-            </div>
-            <motion.p style={{ opacity: hintOpacity }} className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-black/75 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-white">
-              You&apos;re inside {p.title} · keep scrolling
-            </motion.p>
-          </motion.div>
-        )}
+            ))}
+          </div>
 
-        {/* Step text */}
-        {geo && (
-          <motion.div
-            style={{ opacity: panelOpacity, top: textTop, left: geo.desktop ? 24 : 16, width: geo.desktop ? frameW : geo.W - 32, bottom: geo.desktop ? undefined : 16 }}
-            className="absolute z-20 flex flex-col"
+          <button
+            type="button"
+            onClick={() => scrollToSection(`#${nextSlug}`)}
+            className="flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-xs text-muted hover:border-accent hover:text-accent transition-all active:scale-95"
+            title={i < projects.length - 1 ? "Skip to next project" : "Skip to Services"}
           >
-            <div className="mb-2 flex items-center gap-3">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-subtle">
-                {p.title} · step {Math.max(step, 0) + 1}/{S}
-              </span>
-              <span className="flex gap-1">
-                {p.steps.map((_, k) => (
-                  <span key={k} className={`h-1 rounded-full transition-all duration-300 ${k === step ? "w-6 bg-accent" : k < step ? "w-2 bg-accent/60" : "w-2 bg-border-strong"}`} />
-                ))}
+            <span>{i < projects.length - 1 ? "Skip project ↓" : "To Services ↓"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Tab Switcher */}
+      <div className="flex lg:hidden border-b border-border bg-elevated/50 p-1">
+        {(["screen", "workflow", "graph"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 rounded-lg py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all ${
+              mobileTab === tab ? "bg-accent text-black font-bold shadow-sm" : "text-muted hover:text-fg"
+            }`}
+          >
+            {tab === "screen" ? "Interface" : tab === "workflow" ? "Workflow" : "Graph"}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content Body */}
+      <div className="relative flex-1 min-h-0 p-3 sm:p-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] gap-4 overflow-hidden">
+        {/* Left: Product Screen Window */}
+        <div
+          className={`h-full flex-col rounded-2xl border border-border overflow-hidden shadow-lg ${
+            mobileTab === "screen" ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          {/* Browser Mockup Chrome */}
+          <div className="flex h-9 shrink-0 items-center justify-between border-b border-border bg-surface px-3">
+            <span className="flex gap-1.5">
+              <span className="size-2.5 rounded-full bg-[#ff5f57]" />
+              <span className="size-2.5 rounded-full bg-[#febc2e]" />
+              <span className="size-2.5 rounded-full bg-[#28c840]" />
+            </span>
+            <span className="flex items-center gap-1.5 rounded-md bg-elevated px-3 py-0.5 font-mono text-[11px] text-muted max-w-[280px] truncate">
+              <span aria-hidden>🔒</span>
+              {URLS[p.mockup] || `app.${p.slug}.io`}
+            </span>
+            <span className="font-mono text-[10px] text-subtle uppercase">
+              Step {step + 1}/{S}
+            </span>
+          </div>
+
+          {/* Interactive Screen View */}
+          <div className={`relative min-h-0 flex-1 overflow-auto ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
+            <ProductScreen project={p} region={active?.region ?? null} step={step} />
+          </div>
+        </div>
+
+        {/* Right: Workflow + Graph View Cards */}
+        <div
+          className={`h-full flex-col gap-3 min-h-0 ${
+            mobileTab !== "screen" ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          {/* Workflow Diagram Card */}
+          <div
+            className={`card flex min-h-0 flex-1 flex-col overflow-hidden ${
+              mobileTab === "graph" ? "hidden lg:flex" : "flex"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-subtle bg-surface">
+              <span className="font-semibold text-fg">Workflow Pipeline</span>
+              <span className="text-accent normal-case font-medium">
+                {active?.nodes ? `${active.nodes.length} nodes active` : "Interactive"}
               </span>
             </div>
+            <div className="min-h-0 flex-1 p-2 bg-elevated/30">
+              <FlowDiagram flow={p.flow} title={p.title} highlight={active?.nodes} compact />
+            </div>
+          </div>
+
+          {/* Interactive Graph View Card */}
+          <div
+            className={`card flex min-h-0 flex-1 flex-col overflow-hidden ${
+              mobileTab === "workflow" ? "hidden lg:flex" : "flex"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-subtle bg-surface">
+              <span className="font-semibold text-fg">Knowledge Graph</span>
+              <span className="text-muted normal-case text-[10px]">drag nodes</span>
+            </div>
+            <div className="min-h-0 flex-1 bg-elevated/30">
+              <GraphView project={p} highlight={active?.nodes} compact />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Control Bar */}
+      <div className="border-t border-border bg-surface/90 px-4 py-3 sm:px-6 backdrop-blur-md">
+        {/* Segmented Stories Progress Bar */}
+        <div className="mb-2.5 flex items-center gap-1.5 w-full">
+          {p.steps.map((_, k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => jumpToStep(k)}
+              className="relative h-1.5 flex-1 rounded-full bg-border overflow-hidden transition-all hover:h-2"
+              title={`Jump to step ${k + 1}`}
+              aria-label={`Jump to step ${k + 1}`}
+            >
+              <div
+                className="h-full bg-accent transition-all duration-100"
+                style={{
+                  width: k < step ? "100%" : k === step ? `${progress * 100}%` : "0%",
+                }}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* Controls & Active Step Explanation */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Step Selector & Play/Pause */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="flex items-center gap-1 rounded-full bg-elevated border border-border px-3 py-1 font-mono text-xs text-fg hover:border-accent transition-all active:scale-95"
+            >
+              <span>{isPlaying ? "⏸" : "▶"}</span>
+              <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => jumpToStep((step - 1 + S) % S)}
+              className="size-7 rounded-full bg-elevated border border-border flex items-center justify-center font-mono text-xs hover:border-accent transition-transform active:scale-90"
+              aria-label="Previous step"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => jumpToStep((step + 1) % S)}
+              className="size-7 rounded-full bg-elevated border border-border flex items-center justify-center font-mono text-xs hover:border-accent transition-transform active:scale-90"
+              aria-label="Next step"
+            >
+              →
+            </button>
+
+            {/* Direct Step Pills */}
+            <div className="hidden sm:flex items-center gap-1 ml-1">
+              {p.steps.map((_, k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => jumpToStep(k)}
+                  className={`size-6 rounded-md font-mono text-[11px] font-semibold transition-all ${
+                    k === step
+                      ? "bg-accent text-black scale-105 shadow-sm"
+                      : "bg-elevated text-muted hover:text-fg hover:bg-surface border border-border"
+                  }`}
+                >
+                  {k + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Step Details */}
+          <div className="flex-1 min-w-[200px] text-right sm:text-left sm:ml-4">
             <AnimatePresence mode="wait">
               {active && (
-                <motion.div key={step} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                  <h4 className="display text-xl sm:text-3xl">{active.title}</h4>
-                  <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted sm:mt-2 sm:text-base">{active.text}</p>
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <p className="font-semibold text-xs sm:text-sm text-fg line-clamp-1">
+                    <span className="font-mono text-accent mr-1.5">[{step + 1}/{S}]</span>
+                    {active.title}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-muted line-clamp-1 sm:line-clamp-2">
+                    {active.text}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
-            {!geo.desktop && (
-              <div className="card mt-3 min-h-[140px] flex-1 overflow-hidden p-1.5">
-                <FlowDiagram flow={p.flow} title={p.title} highlight={active?.nodes} compact />
-              </div>
-            )}
-            {geo.desktop && step === S - 1 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 flex flex-wrap items-center gap-1.5">
-                <span className="mr-1 font-mono text-[11px] text-subtle">{p.role}</span>
-                {p.tech.map((t) => (
-                  <span key={t} className="chip">{t}</span>
-                ))}
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Workflow + graph, lighting up with each step (desktop; phones show the workflow under the text) */}
-        {geo?.desktop && (
-          <motion.div
-            style={{
-              opacity: panelOpacity,
-              x: panelX,
-              top: 88,
-              bottom: 24,
-              left: frameW + 48,
-              right: 24,
-            }}
-            className="absolute z-20 flex flex-col gap-3"
-          >
-            <div className="card flex min-h-0 flex-1 flex-col overflow-hidden">
-              <p className="flex items-center justify-between border-b border-border px-4 py-2 font-mono text-[10.5px] uppercase tracking-widest text-subtle">
-                Workflow <span className="normal-case tracking-normal">{active ? `${active.nodes.length} components active` : ""}</span>
-              </p>
-              <div className="min-h-0 flex-1 p-2">
-                <FlowDiagram flow={p.flow} title={p.title} highlight={active?.nodes} compact />
-              </div>
-            </div>
-            {(
-              <div className="card flex min-h-0 flex-1 flex-col overflow-hidden">
-                <p className="flex items-center justify-between border-b border-border px-4 py-2 font-mono text-[10.5px] uppercase tracking-widest text-subtle">
-                  Graph view <span className="normal-case tracking-normal">drag the nodes</span>
-                </p>
-                <div className="min-h-0 flex-1">
-                  <GraphView project={p} highlight={active?.nodes} compact />
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
+          </div>
+        </div>
       </div>
-    </section>
+    </article>
   );
 }
 
 export default function Work() {
   return (
-    <div id="work" data-section="work" className="relative scroll-mt-24">
-      <Container className="py-24 md:py-32">
-        <SectionHeader eyebrow="Selected work" title="Step inside what I've" accent="shipped" sub="Six products. Scroll into each one: the interface opens up, and every part lights up in the workflow and the graph as it's explained." />
-        <nav aria-label="Projects" className="mt-8 flex flex-wrap gap-2">
+    <section id="work" data-section="work" className="relative scroll-mt-24">
+      <Container className="pt-20 pb-8 md:pt-28 md:pb-12">
+        <SectionHeader
+          eyebrow="Selected work"
+          title="Step inside what I've"
+          accent="shipped"
+          sub="Six products. Interactive players step through real workflows, live interfaces, and knowledge graphs without scroll-locking."
+        />
+        {/* Quick jump navigation chips */}
+        <nav aria-label="Projects navigation" className="mt-6 flex flex-wrap gap-2">
           {projects.map((p, i) => (
-            <a key={p.slug} href={`#project-${p.slug}`} className="chip hover:!text-fg">
-              {pad(i + 1)} {p.title}
-            </a>
+            <button
+              key={p.slug}
+              type="button"
+              onClick={() => scrollToSection(`#project-${p.slug}`)}
+              className="chip hover:!text-fg transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="font-bold text-accent mr-1">{pad(i + 1)}</span>
+              {p.title}
+            </button>
           ))}
         </nav>
       </Container>
-      {projects.map((p, i) => (
-        <ProjectScrolly key={p.slug} p={p} i={i} />
-      ))}
-    </div>
+
+      {/* Render each project as a self-contained player */}
+      <div className="space-y-4">
+        {projects.map((p, i) => (
+          <ProjectPlayer key={p.slug} p={p} i={i} />
+        ))}
+      </div>
+    </section>
   );
 }
