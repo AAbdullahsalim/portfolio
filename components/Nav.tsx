@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { profile, projects } from "@/data/site";
-import { THEMES, useTheme } from "./theme";
+import { THEMES, scrollToSection, useTheme } from "./theme";
 
 const links = [
   { href: "#about", label: "About" },
@@ -149,7 +149,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   const go = useCallback(
     (hash: string) => {
       onClose();
-      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+      scrollToSection(hash);
     },
     [onClose],
   );

@@ -37,6 +37,53 @@ function centerSection(): HTMLElement | null {
   return null;
 }
 
+/* ---------------- In-page navigation ---------------- */
+
+// While a nav jump is scrolling, shuffle stays still so layouts can't move the target.
+const nav = { active: false, raf: 0 };
+
+/** Scroll to a section, re-aiming at its live position every frame */
+export function scrollToSection(hash: string) {
+  const el = document.querySelector<HTMLElement>(hash);
+  if (!el) return;
+  cancelAnimationFrame(nav.raf);
+  const target = () => {
+    const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    return Math.max(0, el.getBoundingClientRect().top + window.scrollY - margin);
+  };
+  const start = window.scrollY;
+  const dist = Math.abs(target() - start);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const jump = (y: number) => window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+  if (reduce || dist < 2) {
+    jump(target());
+    return;
+  }
+  nav.active = true;
+  const duration = Math.min(1400, Math.max(500, 400 + dist / 10));
+  const t0 = performance.now();
+  const stop = () => {
+    cancelAnimationFrame(nav.raf);
+    window.removeEventListener("wheel", stop);
+    window.removeEventListener("touchstart", stop);
+    setTimeout(() => (nav.active = false), 120);
+  };
+  // Your own scrolling takes over immediately
+  window.addEventListener("wheel", stop, { passive: true, once: true });
+  window.addEventListener("touchstart", stop, { passive: true, once: true });
+  const tick = (now: number) => {
+    const t = Math.min(1, (now - t0) / duration);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    jump(start + (target() - start) * e);
+    if (t < 1) nav.raf = requestAnimationFrame(tick);
+    else {
+      jump(target());
+      stop();
+    }
+  };
+  nav.raf = requestAnimationFrame(tick);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>("studio");
   const [mode, setModeState] = useState<Mode>("shuffle");
@@ -88,31 +135,57 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
-  // Shuffle: a new random style each time you scroll into a new section
+  // Every in-page link (nav, buttons, footer) uses the steady scroll above
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      const a = (e.target as Element).closest?.('a[href^="#"]');
+      const hash = a?.getAttribute("href");
+      if (!hash || hash === "#" || !document.querySelector(hash)) return;
+      e.preventDefault();
+      scrollToSection(hash);
+      history.replaceState(null, "", hash);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
+  // Shuffle: a new random style once you've settled into a new section.
+  // Skipped while a nav jump is moving, and never the instant you land.
   useEffect(() => {
     if (mode !== "shuffle") return;
     let last: string | null = null;
+    let current: string | null = null;
     let lastSwitch = performance.now();
+    let pending = 0;
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (!e.isIntersecting) continue;
           const id = (e.target as HTMLElement).dataset.section!;
-          if (last === null) {
+          current = id;
+          if (last === null || nav.active) {
             last = id;
             continue;
           }
-          if (id === last || performance.now() - lastSwitch < 1500) continue;
-          last = id;
-          lastSwitch = performance.now();
-          const others = THEMES.filter((x) => x.id !== themeRef.current);
-          setTheme(others[Math.floor(Math.random() * others.length)].id);
+          if (id === last) continue;
+          clearTimeout(pending);
+          pending = window.setTimeout(() => {
+            if (current !== id || nav.active || performance.now() - lastSwitch < 1500) return;
+            last = id;
+            lastSwitch = performance.now();
+            const others = THEMES.filter((x) => x.id !== themeRef.current);
+            setTheme(others[Math.floor(Math.random() * others.length)].id);
+          }, 450);
         }
       },
       { rootMargin: "-50% 0px -50% 0px" },
     );
     document.querySelectorAll("[data-section]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    return () => {
+      clearTimeout(pending);
+      io.disconnect();
+    };
   }, [mode, setTheme]);
 
   return <ThemeContext.Provider value={{ theme, mode, setTheme, setMode }}>{children}</ThemeContext.Provider>;
