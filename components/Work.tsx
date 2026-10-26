@@ -132,8 +132,8 @@ function ProjectScrolly({ p, i }: { p: Project; i: number }) {
         {/* Step text */}
         {geo && (
           <motion.div
-            style={{ opacity: panelOpacity, top: textTop, left: geo.desktop ? 24 : 16, width: geo.desktop ? frameW : geo.W - 32 }}
-            className="absolute z-20"
+            style={{ opacity: panelOpacity, top: textTop, left: geo.desktop ? 24 : 16, width: geo.desktop ? frameW : geo.W - 32, bottom: geo.desktop ? undefined : 16 }}
+            className="absolute z-20 flex flex-col"
           >
             <div className="mb-2 flex items-center gap-3">
               <span className="font-mono text-[11px] uppercase tracking-widest text-subtle">
@@ -148,11 +148,16 @@ function ProjectScrolly({ p, i }: { p: Project; i: number }) {
             <AnimatePresence mode="wait">
               {active && (
                 <motion.div key={step} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                  <h4 className="display text-2xl sm:text-3xl">{active.title}</h4>
-                  <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted sm:text-base">{active.text}</p>
+                  <h4 className="display text-xl sm:text-3xl">{active.title}</h4>
+                  <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted sm:mt-2 sm:text-base">{active.text}</p>
                 </motion.div>
               )}
             </AnimatePresence>
+            {!geo.desktop && (
+              <div className="card mt-3 min-h-[140px] flex-1 overflow-hidden p-1.5">
+                <FlowDiagram flow={p.flow} title={p.title} highlight={active?.nodes} compact />
+              </div>
+            )}
             {geo.desktop && step === S - 1 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span className="mr-1 font-mono text-[11px] text-subtle">{p.role}</span>
@@ -164,15 +169,16 @@ function ProjectScrolly({ p, i }: { p: Project; i: number }) {
           </motion.div>
         )}
 
-        {/* Workflow + graph, lighting up with each step */}
-        {geo && (
+        {/* Workflow + graph, lighting up with each step (desktop; phones show the workflow under the text) */}
+        {geo?.desktop && (
           <motion.div
             style={{
               opacity: panelOpacity,
               x: panelX,
-              ...(geo.desktop
-                ? { top: 88, bottom: 24, left: frameW + 48, right: 24 }
-                : { top: textTop + 150, bottom: 16, left: 16, right: 16 }),
+              top: 88,
+              bottom: 24,
+              left: frameW + 48,
+              right: 24,
             }}
             className="absolute z-20 flex flex-col gap-3"
           >
@@ -184,7 +190,7 @@ function ProjectScrolly({ p, i }: { p: Project; i: number }) {
                 <FlowDiagram flow={p.flow} title={p.title} highlight={active?.nodes} compact />
               </div>
             </div>
-            {geo.desktop && (
+            {(
               <div className="card flex min-h-0 flex-1 flex-col overflow-hidden">
                 <p className="flex items-center justify-between border-b border-border px-4 py-2 font-mono text-[10.5px] uppercase tracking-widest text-subtle">
                   Graph view <span className="normal-case tracking-normal">drag the nodes</span>

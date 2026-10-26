@@ -11,20 +11,16 @@ export const THEMES = [
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
-export type Mode = "shuffle" | "lock";
 const KEY = "taha-style";
-const MODE_KEY = "taha-style-mode";
 
 // Runs before paint so the saved style shows without a flash
 export const themeScript = `try{var t=localStorage.getItem("${KEY}");if(t==="studio"||t==="pop"||t==="sketch")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
 
 type Ctx = {
   theme: ThemeId;
-  mode: Mode;
   setTheme: (t: ThemeId, origin?: { x: number; y: number }) => void;
-  setMode: (m: Mode) => void;
 };
-const ThemeContext = createContext<Ctx>({ theme: "studio", mode: "shuffle", setTheme: () => {}, setMode: () => {} });
+const ThemeContext = createContext<Ctx>({ theme: "studio", setTheme: () => {} });
 export const useTheme = () => useContext(ThemeContext);
 
 /** The section crossing the middle of the screen; used to keep your place when layouts change */
@@ -39,8 +35,7 @@ function centerSection(): HTMLElement | null {
 
 /* ---------------- In-page navigation ---------------- */
 
-// While a nav jump is scrolling, shuffle stays still so layouts can't move the target.
-const nav = { active: false, raf: 0 };
+const nav = { raf: 0 };
 
 /** Scroll to a section, re-aiming at its live position every frame */
 export function scrollToSection(hash: string) {
@@ -59,14 +54,12 @@ export function scrollToSection(hash: string) {
     jump(target());
     return;
   }
-  nav.active = true;
   const duration = Math.min(1400, Math.max(500, 400 + dist / 10));
   const t0 = performance.now();
   const stop = () => {
     cancelAnimationFrame(nav.raf);
     window.removeEventListener("wheel", stop);
     window.removeEventListener("touchstart", stop);
-    setTimeout(() => (nav.active = false), 120);
   };
   // Your own scrolling takes over immediately
   window.addEventListener("wheel", stop, { passive: true, once: true });
@@ -86,7 +79,6 @@ export function scrollToSection(hash: string) {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>("studio");
-  const [mode, setModeState] = useState<Mode>("shuffle");
   const themeRef = useRef<ThemeId>("studio");
 
   useEffect(() => {
@@ -95,10 +87,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(t);
       themeRef.current = t;
     }
-    try {
-      const m = localStorage.getItem(MODE_KEY);
-      if (m === "lock" || m === "shuffle") setModeState(m);
-    } catch {}
   }, []);
 
   const setTheme = useCallback((t: ThemeId, origin?: { x: number; y: number }) => {
@@ -128,13 +116,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else apply();
   }, []);
 
-  const setMode = useCallback((m: Mode) => {
-    setModeState(m);
-    try {
-      localStorage.setItem(MODE_KEY, m);
-    } catch {}
-  }, []);
-
   // Every in-page link (nav, buttons, footer) uses the steady scroll above
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -150,45 +131,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
-  // Shuffle: a new random style once you've settled into a new section.
-  // Skipped while a nav jump is moving, and never the instant you land.
-  useEffect(() => {
-    if (mode !== "shuffle") return;
-    let last: string | null = null;
-    let current: string | null = null;
-    let lastSwitch = performance.now();
-    let pending = 0;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          const id = (e.target as HTMLElement).dataset.section!;
-          current = id;
-          if (last === null || nav.active) {
-            last = id;
-            continue;
-          }
-          if (id === last) continue;
-          clearTimeout(pending);
-          pending = window.setTimeout(() => {
-            if (current !== id || nav.active || performance.now() - lastSwitch < 1500) return;
-            last = id;
-            lastSwitch = performance.now();
-            const others = THEMES.filter((x) => x.id !== themeRef.current);
-            setTheme(others[Math.floor(Math.random() * others.length)].id);
-          }, 450);
-        }
-      },
-      { rootMargin: "-50% 0px -50% 0px" },
-    );
-    document.querySelectorAll("[data-section]").forEach((el) => io.observe(el));
-    return () => {
-      clearTimeout(pending);
-      io.disconnect();
-    };
-  }, [mode, setTheme]);
-
-  return <ThemeContext.Provider value={{ theme, mode, setTheme, setMode }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
 /* ---------------- The style wheel ---------------- */
@@ -236,7 +179,7 @@ function WheelDefs() {
 }
 
 export function StyleWheel() {
-  const { theme, mode, setTheme, setMode } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const idx = THEMES.findIndex((t) => t.id === theme);
@@ -262,7 +205,8 @@ export function StyleWheel() {
   const spin = () => {
     if (spinning) return;
     setSpinning(true);
-    const pick = Math.floor(Math.random() * 3);
+    // Always land on a different style than the current one
+    const pick = (idx + 1 + Math.floor(Math.random() * 2)) % 3;
     const target = -(pick * 120 + 60);
     let next = target;
     const cur = rot.get();
@@ -274,7 +218,7 @@ export function StyleWheel() {
   };
 
   return (
-    <div className="fixed bottom-5 left-5 z-[58] font-[family-name:var(--font-geist-sans)] text-[#111]">
+    <div className="style-wheel fixed right-[68px] top-[22px] z-[58] flex flex-col-reverse items-end font-[family-name:var(--font-geist-sans)] text-[#111] sm:bottom-5 sm:left-5 sm:right-auto sm:top-auto sm:flex-col sm:items-start">
       <AnimatePresence>
         {open && (
           <motion.div
@@ -282,7 +226,7 @@ export function StyleWheel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.9 }}
             transition={{ duration: 0.25 }}
-            className="mb-3 w-[260px] rounded-3xl border-2 border-black bg-[#f4f1ea] p-4 shadow-[6px_6px_0_#111]"
+            className="mt-3 w-[260px] rounded-3xl border-2 border-black bg-[#f4f1ea] p-4 shadow-[6px_6px_0_#111] sm:mb-3 sm:mt-0"
             role="dialog"
             aria-label="Style wheel"
           >
@@ -299,7 +243,6 @@ export function StyleWheel() {
                     className="cursor-pointer"
                     onClick={(e) => {
                       if (spinning) return;
-                      setMode("lock");
                       setTheme(t.id, { x: e.clientX, y: e.clientY });
                     }}
                   >
@@ -316,19 +259,6 @@ export function StyleWheel() {
               </button>
             </div>
             <p className="mt-3 text-center text-xs text-black/60">Click a slice to pick, or spin for luck.</p>
-            <div className="mt-3 grid grid-cols-2 gap-1 rounded-full border-2 border-black bg-white p-1 text-xs font-semibold">
-              {(["shuffle", "lock"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  aria-pressed={mode === m}
-                  className={`rounded-full px-3 py-1.5 transition-colors ${mode === m ? "bg-black text-white" : "hover:bg-black/5"}`}
-                >
-                  {m === "shuffle" ? "🔀 Shuffle on scroll" : "🔒 Keep this one"}
-                </button>
-              ))}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -340,7 +270,7 @@ export function StyleWheel() {
         aria-label="Open the style wheel"
         className="group flex items-center gap-2 rounded-full border-2 border-black bg-[#f4f1ea] p-1 sm:pr-4 text-sm font-semibold shadow-[3px_3px_0_#111] transition-transform hover:-translate-y-0.5"
       >
-        <span className="relative block size-10">
+        <span className="relative block size-8 sm:size-10">
           <svg viewBox="0 0 20 16" className="absolute -top-1.5 left-1/2 z-10 w-2.5 -translate-x-1/2" aria-hidden>
             <path d="M0 0H20L10 16Z" fill="#111" />
           </svg>
@@ -351,9 +281,9 @@ export function StyleWheel() {
             ))}
           </motion.svg>
         </span>
-        <span className="hidden leading-tight sm:block">
+        <span className="wheel-label hidden leading-tight sm:block">
           {THEMES[idx]?.name}
-          <span className="block text-[10px] font-medium text-black/55">{mode === "shuffle" ? "shuffles as you scroll" : "locked"}</span>
+          <span className="block text-[10px] font-medium text-black/55">tap to change style</span>
         </span>
       </button>
     </div>

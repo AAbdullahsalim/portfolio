@@ -95,6 +95,8 @@ const mix = (a: string, b: string, t: number) => {
 };
 
 const N = story.length;
+// Where each scene sits horizontally, so narrow screens can pan to it
+const FOCUS: Record<string, number> = { laptop: 860, camera: 930, chart: 950, pulse: 900, pipeline: 940, network: 950, door: 1170 };
 
 export default function Story() {
   const { theme } = useTheme();
@@ -102,6 +104,7 @@ export default function Story() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const pencil = useRef<SVGGElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const meRefs = useRef<(SVGPathElement | null)[]>([]);
   const sceneRefs = useRef<(SVGPathElement | null)[][]>(story.map(() => []));
   const groupRefs = useRef<(SVGGElement | null)[]>([]);
@@ -156,6 +159,23 @@ export default function Story() {
       const ch = Math.min(N - 1, Math.floor(t));
       if (markerRef.current) markerRef.current.textContent = `${String(ch).padStart(2, "0")}  ${story[ch].place}`;
 
+      // On narrow screens the drawing is wider than the view: follow the pencil
+      const svg = svgRef.current;
+      if (svg) {
+        const visible = Math.min(1440, (900 * svg.clientWidth) / Math.max(1, svg.clientHeight));
+        let x = 0;
+        if (visible < 1440) {
+          // Start on me, then glide to each scene as its chapter begins
+          const ci = Math.min(N - 1, Math.max(0, Math.floor(t)));
+          const here = FOCUS[story[ci].scene];
+          const next = FOCUS[story[Math.min(N - 1, ci + 1)].scene];
+          let focus = here + (next - here) * clamp((t - ci - 0.88) / 0.2);
+          if (ci === 0) focus = 330 + (focus - 330) * clamp((t - 0.3) / 0.15);
+          x = Math.max(0, Math.min(1440 - visible, focus - visible / 2));
+        }
+        svg.setAttribute("viewBox", `${x.toFixed(1)} 0 1440 900`);
+      }
+
       if (pencil.current) {
         if (tip) {
           const pt = tip as DOMPoint;
@@ -182,7 +202,7 @@ export default function Story() {
             ref={(el) => {
               textRefs.current[i] = el;
             }}
-            className="absolute inset-x-0 top-24 mx-auto grid max-w-6xl gap-6 px-6 opacity-0 sm:px-8 md:top-28 md:grid-cols-2"
+            className="story-text absolute inset-x-0 top-24 mx-auto grid max-w-6xl gap-6 px-6 opacity-0 sm:px-8 md:top-28 md:grid-cols-2"
           >
             <div>
               <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] opacity-70">
@@ -206,7 +226,7 @@ export default function Story() {
         ))}
 
         {/* Line drawing */}
-        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 h-[62%] w-full md:h-full" aria-hidden>
+        <svg ref={svgRef} viewBox="0 0 1440 900" preserveAspectRatio="xMinYMax slice" className="story-art absolute inset-x-0 bottom-0 h-[58%] w-full md:h-full" aria-hidden>
           <g fill="none" stroke={pal.line} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter={theme === "sketch" ? "url(#rough)" : undefined}>
             <path d={HORIZON} />
             <g>

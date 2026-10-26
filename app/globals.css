@@ -467,3 +467,16 @@ body {
   border-radius: 255px 25px 225px 25px / 25px 225px 25px 255px; filter: url(#rough);
 }
 
+
+/* Short screens (phones held sideways) */
+@media (max-height: 500px) {
+  .short-hide { display: none !important; }
+  .short-h1 { font-size: 2.6rem !important; }
+  .story-text { top: 76px !important; gap: 0.5rem !important; }
+  .story-text h2 { font-size: 1.6rem !important; }
+  .story-text p { font-size: 13px !important; }
+  .story-art { height: 50% !important; }
+  .style-wheel { top: auto !important; bottom: 10px !important; left: auto !important; right: 10px !important; flex-direction: column !important; align-items: flex-end !important; }
+  .style-wheel > [role="dialog"] { margin: 0 0 8px 0 !important; transform-origin: bottom right; scale: 0.85; }
+  .wheel-label { display: none !important; }
+}

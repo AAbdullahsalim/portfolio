@@ -86,7 +86,7 @@ export default function Hero() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto mb-6 w-fit"
+              className="short-hide mx-auto mb-6 w-fit"
             >
               <div className="relative">
                 <div className="absolute -inset-1.5 animate-[spin_24s_linear_infinite] rounded-full border-2 border-dashed border-accent" />
@@ -107,7 +107,7 @@ export default function Hero() {
               Hi, I&apos;m {profile.firstName} · {profile.role}
             </motion.p>
 
-            <h1 className="display text-[2.8rem] sm:text-6xl md:text-7xl">
+            <h1 className="display short-h1 text-[2.8rem] sm:text-6xl md:text-7xl">
               {words.map((w, i) => (
                 <motion.span
                   key={w + i}
@@ -130,7 +130,7 @@ export default function Hero() {
               </motion.span>
             </h1>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
+            <motion.div className="short-hide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
               <TraceTyper />
             </motion.div>
 

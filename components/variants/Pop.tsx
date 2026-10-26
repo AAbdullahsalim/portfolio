@@ -8,7 +8,7 @@ import { Reveal } from "../ui";
 // Pop Art: the site as a comic book. Cover, panels, captions, bubbles.
 
 const Burst = ({ children, fill = "#ffe600", className = "", size = 150 }: { children: React.ReactNode; fill?: string; className?: string; size?: number }) => (
-  <div className={`relative grid place-items-center ${className}`} style={{ width: size, height: size }}>
+  <div className={`relative grid place-items-center ${className}`} style={{ width: `min(${size}px, 44vw)`, height: `min(${size}px, 44vw)` }}>
     <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full">
       <path
         d="M100 4 L118 52 L166 22 L152 76 L198 88 L156 112 L186 158 L132 148 L118 198 L96 156 L58 192 L60 140 L8 150 L42 108 L2 76 L56 70 L36 22 L84 48Z"
@@ -143,11 +143,11 @@ export function PopAbout() {
         {stats.map((s, i) => (
           <Reveal key={s.label} delay={i * 0.06}>
             <Burst size={190} fill={["#ffe600", "#9fd3ff", "#ff4fb4", "#ff2e2e"][i]} className={i % 2 ? "rotate-6" : "-rotate-6"}>
-              <span className="block font-[family-name:var(--font-bangers)] text-6xl leading-none text-white [-webkit-text-stroke:2px_#111]">
+              <span className="block font-[family-name:var(--font-bangers)] text-5xl leading-none text-white [-webkit-text-stroke:2px_#111] sm:text-6xl">
                 {s.value}
                 {s.suffix}
               </span>
-              <span className="mx-auto mt-1 block max-w-[110px] font-[family-name:var(--font-archivo)] text-[10px] font-black uppercase leading-tight">{s.label}</span>
+              <span className="mx-auto mt-1 block max-w-[86px] font-[family-name:var(--font-archivo)] text-[9px] font-black uppercase leading-tight sm:max-w-[110px] sm:text-[10px]">{s.label}</span>
             </Burst>
           </Reveal>
         ))}
