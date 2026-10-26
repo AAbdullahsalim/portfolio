@@ -57,27 +57,33 @@ function Node({ n, on }: { n: FlowNode; on: boolean }) {
   );
 }
 
-export default function FlowDiagram({ flow, title }: { flow: FlowData; title: string }) {
+export default function FlowDiagram({ flow, title, highlight, compact = false }: { flow: FlowData; title: string; highlight?: string[]; compact?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "-60px" });
   const [route, setRoute] = useState(0);
   const byId = Object.fromEntries(flow.nodes.map((n) => [n.id, n]));
   const r = flow.routes[route];
-  const onRoute = new Set(r.path);
-  const routeEdges = new Set(r.path.slice(1).map((id, i) => `${r.path[i]}>${id}`));
-  const pts = r.path.map((id) => byId[id]);
+  // A walkthrough step can light up its own nodes instead of the cycling routes
+  const path = highlight && highlight.length ? highlight : r.path;
+  const onRoute = new Set(path);
+  const routeEdges = new Set(
+    highlight && highlight.length
+      ? flow.edges.filter(([a, b]) => onRoute.has(a) && onRoute.has(b)).map(([a, b]) => `${a}>${b}`)
+      : r.path.slice(1).map((id, i) => `${r.path[i]}>${id}`),
+  );
+  const pts = path.map((id) => byId[id]).filter(Boolean);
   const d = `M${pts.map((p) => `${p.x} ${p.y}`).join(" L")}`;
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || highlight) return;
     const t = setInterval(() => setRoute((v) => (v + 1) % flow.routes.length), 3600);
     return () => clearInterval(t);
-  }, [inView, flow.routes.length]);
+  }, [inView, flow.routes.length, highlight]);
 
   return (
-    <div ref={ref}>
-      <div className="overflow-x-auto">
-        <svg viewBox="0 0 480 360" className="block w-full min-w-[440px]" role="img" aria-label={`${title} workflow`}>
+    <div ref={ref} className={compact ? "h-full" : ""}>
+      <div className={compact ? "h-full" : "overflow-x-auto"}>
+        <svg viewBox="0 0 480 360" className={`block w-full ${compact ? "h-full" : "min-w-[440px]"}`} role="img" aria-label={`${title} workflow`}>
           {flow.groups?.map((g) => (
             <g key={g.label}>
               <rect x={g.x} y={g.y} width={g.w} height={g.h} rx="12" fill={`var(--${g.tone})`} fillOpacity="0.06" stroke={`var(--${g.tone})`} strokeOpacity="0.35" strokeDasharray="2 4" />
@@ -104,9 +110,9 @@ export default function FlowDiagram({ flow, title }: { flow: FlowData; title: st
           {flow.nodes.map((n) => (
             <Node key={n.id} n={n} on={onRoute.has(n.id)} />
           ))}
-          <g key={route}>
+          <g key={path.join("-")}>
             <circle r="9" fill="var(--accent)" opacity="0.25">
-              <animateMotion dur={`${pts.length * 0.55}s`} repeatCount="indefinite" path={d} />
+              <animateMotion dur={`${Math.max(pts.length, 2) * 0.55}s`} repeatCount="indefinite" path={d} />
             </circle>
             <circle r="4" fill="var(--accent)">
               <animateMotion dur={`${pts.length * 0.55}s`} repeatCount="indefinite" path={d} />
@@ -114,7 +120,7 @@ export default function FlowDiagram({ flow, title }: { flow: FlowData; title: st
           </g>
         </svg>
       </div>
-      <div className="flex items-start gap-2 border-t border-border px-4 py-3 font-mono text-[11px] text-muted">
+      {!compact && <div className="flex items-start gap-2 border-t border-border px-4 py-3 font-mono text-[11px] text-muted">
         <span className="mt-1 size-1.5 shrink-0 animate-pulse rounded-full bg-accent" />
         <motion.span key={route} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}>
           {r.caption}
@@ -124,7 +130,7 @@ export default function FlowDiagram({ flow, title }: { flow: FlowData; title: st
             <button key={i} type="button" onClick={() => setRoute(i)} aria-label={`Show path ${i + 1}`} className={`size-2 rounded-full ${i === route ? "bg-accent" : "bg-border-strong"}`} />
           ))}
         </span>
-      </div>
+      </div>}
     </div>
   );
 }

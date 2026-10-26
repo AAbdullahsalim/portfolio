@@ -83,10 +83,7 @@ const SCENES: Record<string, string[]> = {
 type Palette = { bgs: string[]; line: string; text: string };
 const PALETTES: Record<ThemeId, Palette> = {
   studio: { bgs: ["#1c1c1b", "#55607d", "#6e4b4b", "#3d5b78", "#5b6640", "#4a4c78", "#2f4f46"], line: "#f4f2ec", text: "#f4f2ec" },
-  maximal: { bgs: ["#1b1442", "#7a1450", "#0f5c5a", "#5b2a86", "#a3341f", "#123e7a", "#6b1f5f"], line: "#ffc93c", text: "#fff4e0" },
-  vector: { bgs: ["#f5ead9", "#f3d3c4", "#dfe8d6", "#d8e1ef", "#f6e2b3", "#e6dcf0", "#cfe3dc"], line: "#23314d", text: "#23314d" },
   pop: { bgs: ["#fff8e7", "#ffe600", "#9fd3ff", "#ff9ec8", "#fff1b8", "#ff8a8a", "#a8c4ff"], line: "#111111", text: "#111111" },
-  graffiti: { bgs: ["#161616", "#1f1a28", "#14211a", "#26141f", "#111c26", "#22200f", "#161616"], line: "#b6ff00", text: "#f4f4f0" },
   sketch: { bgs: ["#fbf8ef", "#f8f3e0", "#f2f6ec", "#f8efef", "#edf1f8", "#f7f4e4", "#fbf8ef"], line: "#1d2a6b", text: "#1d2a6b" },
 };
 
@@ -176,7 +173,7 @@ export default function Story() {
   }, [update, scrollYProgress, theme]);
 
   return (
-    <section ref={section} id="story" className="relative" style={{ height: `${N * 110 + 40}vh` }} aria-label="How I got here">
+    <section ref={section} id="story" data-section="story" className="relative" style={{ height: `${N * 110 + 40}vh` }} aria-label="How I got here">
       <div ref={stage} className={`story-stage sticky top-0 h-[100svh] overflow-hidden`} style={{ color: pal.text, backgroundColor: pal.bgs[0] }}>
         {/* Chapter text */}
         {story.map((c, i) => (

@@ -343,7 +343,7 @@ export default function Experience() {
   };
 
   return (
-    <section ref={ref} id="experience" className="relative scroll-mt-24 overflow-hidden py-24 md:py-28">
+    <section ref={ref} id="experience" data-section="experience" className="relative scroll-mt-24 overflow-hidden py-24 md:py-28">
       <Container>
         <div className="flex items-start justify-between gap-6">
           <Eyebrow>Where I&apos;ve worked</Eyebrow>

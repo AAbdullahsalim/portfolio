@@ -225,6 +225,8 @@ export type Project = {
   tech: string[];
   stats?: Stat[];
   mockup: "finbot" | "health" | "hospitality" | "archive" | "relay" | "workforce";
+  /** The scroll walkthrough: each step lights up these flow nodes and this part of the interface */
+  steps: { title: string; text: string; nodes: string[]; region: string }[];
   flow: Flow;
   /** Which flow nodes each technology powers (used by the graph view) */
   uses: Record<string, string[]>;
@@ -253,6 +255,13 @@ export const projects: Project[] = [
       { value: "100%", label: "Runs traced" },
     ],
     mockup: "finbot",
+    steps: [
+      { title: "A question comes in", text: "An analyst asks for a review of the Q3 filing. The LangGraph router reads the intent and decides which agents to wake up.", nodes: ["user", "router"], region: "chat" },
+      { title: "The document agent reads the filing", text: "It pulls the exact figures out of the filing and the ledger through the MCP database tool, so nothing is retyped or guessed.", nodes: ["router", "doc", "mcp", "db"], region: "doc" },
+      { title: "The compliance agent checks every rule", text: "Ratios are computed by the MCP calculation engine, not the model, then checked rule by rule. Anything that fails is flagged with its source.", nodes: ["router", "comp", "mcp", "calc"], region: "checks" },
+      { title: "The report agent writes it up", text: "Charts come from the visualization tool, the summary from the agent, and the whole thing exports as a report the team can sign off.", nodes: ["router", "rep", "mcp", "viz"], region: "chart" },
+      { title: "Every run is traced and scored", text: "Each step is traced in LangSmith and Langfuse, scored by evals and wrapped in guardrails, so a bad answer gets caught before anyone reads it.", nodes: ["user", "router"], region: "trace" },
+    ],
     flow: {
       nodes: [
         { id: "user", label: "User query", x: 240, y: 30, kind: "io" },
@@ -296,6 +305,13 @@ export const projects: Project[] = [
     role: "Lead AI/ML Engineer · data platform, report jobs, AI insights",
     tech: ["PostgreSQL", "Airflow", "dbt", "Celery", "Redis", "LLM", "Docker"],
     mockup: "workforce",
+    steps: [
+      { title: "Raw data lands every night", text: "Timeclock, HR and rostering data arrive from each customer. Airflow picks it up on schedule.", nodes: ["src", "airflow"], region: "sources" },
+      { title: "dbt shapes it, per tenant", text: "dbt models clean and join it into PostgreSQL, with every customer's data kept separate.", nodes: ["airflow", "dbt", "pg", "tenant"], region: "tenant" },
+      { title: "Report jobs run on time", text: "Celery and Redis run daily, weekly and monthly report jobs, so nobody builds a spreadsheet on Monday morning.", nodes: ["sched", "celery", "pg"], region: "schedule" },
+      { title: "An LLM writes the insight", text: "On top of the numbers, a model writes the two sentences a manager actually needs: what changed and why.", nodes: ["celery", "llm"], region: "insight" },
+      { title: "It lands where managers work", text: "The dashboard updates and the report goes out by email and PDF.", nodes: ["llm", "reports", "dash", "email"], region: "kpis" },
+    ],
     flow: {
       nodes: [
         { id: "src", label: "Ops data", x: 60, y: 50, kind: "store" },
@@ -341,6 +357,13 @@ export const projects: Project[] = [
       { value: "Eval", label: "Driven tuning" },
     ],
     mockup: "health",
+    steps: [
+      { title: "The documents are indexed", text: "Protocols and formularies are chunked and embedded as they arrive, into both a vector index and a keyword index.", nodes: ["docs", "ingest", "pg", "es"], region: "library" },
+      { title: "A question runs two searches", text: "Dense search finds passages by meaning; sparse search catches exact drug names and codes the embeddings miss.", nodes: ["user", "hybrid", "pg", "es"], region: "question" },
+      { title: "Results are fused and reranked", text: "Both result lists are merged, then a reranker picks the few passages the model is allowed to use.", nodes: ["pg", "es", "fuse", "rerank"], region: "sources" },
+      { title: "The answer cites its sources", text: "The model answers only from those passages, with a citation on every claim. No source, no claim.", nodes: ["rerank", "llm", "answer"], region: "answer" },
+      { title: "Quality is measured, not felt", text: "A structured evaluation set scores retrieval and answers, so every change is checked before it ships.", nodes: ["evals", "rerank"], region: "eval" },
+    ],
     flow: {
       nodes: [
         { id: "docs", label: "Medical docs", x: 75, y: 40, kind: "store" },
@@ -383,6 +406,12 @@ export const projects: Project[] = [
     tech: ["Next.js", "TypeScript", "Twilio", "WebRTC", "Webhooks"],
     stats: [{ value: "$20–30", label: "Monthly dialer cost replaced" }],
     mockup: "relay",
+    steps: [
+      { title: "Click to call, in the browser", text: "The Next.js API issues a short-lived Twilio token, and the browser becomes the phone. No desk phone, no app.", nodes: ["ui", "next", "token"], region: "dialer" },
+      { title: "Twilio connects the call", text: "The call goes over WebRTC to Twilio and out to the prospect's phone anywhere in the world.", nodes: ["ui", "twilio", "pstn", "callee"], region: "call" },
+      { title: "Webhooks log the outcome", text: "When the call ends, Twilio's status webhook records duration and result automatically.", nodes: ["twilio", "hooks", "logs"], region: "log" },
+      { title: "The CRM updates itself", text: "The contact moves along the pipeline with notes and a follow-up, ready for the next call.", nodes: ["logs", "crm", "ui"], region: "pipeline" },
+    ],
     flow: {
       nodes: [
         { id: "ui", label: "Browser softphone", x: 75, y: 55, kind: "io" },
@@ -421,6 +450,13 @@ export const projects: Project[] = [
     role: "Python/Flask Engineer · platform, data model, compliance features",
     tech: ["Python", "Flask", "SQLAlchemy", "Data Governance", "Compliance"],
     mockup: "archive",
+    steps: [
+      { title: "Records leave the old systems", text: "Extraction jobs pull records out of ageing source systems in batches.", nodes: ["legacy", "extract"], region: "migration" },
+      { title: "Every record is verified", text: "Each record is validated and checksummed, so the archive provably matches the source.", nodes: ["extract", "validate", "models"], region: "table" },
+      { title: "Retention rules apply themselves", text: "Records are stored with their retention period and legal holds, enforced by policy instead of memory.", nodes: ["validate", "archive", "policy"], region: "policy" },
+      { title: "Search respects roles", text: "The Flask API checks who is asking before any record or report is returned.", nodes: ["search", "flask", "rbac", "models"], region: "search" },
+      { title: "Everything is audited", text: "Views, exports and policy changes are written to an audit log for compliance.", nodes: ["flask", "audit", "policy"], region: "audit" },
+    ],
     flow: {
       nodes: [
         { id: "legacy", label: "Legacy systems", x: 60, y: 55, kind: "store" },
@@ -464,6 +500,13 @@ export const projects: Project[] = [
       { value: "2", label: "Databases unified" },
     ],
     mockup: "hospitality",
+    steps: [
+      { title: "Bookings and guests in one place", text: "Python ETL joins bookings from MySQL and guest history from MongoDB into model-ready features.", nodes: ["pms", "mongo", "etl", "feat"], region: "kpis" },
+      { title: "Forecast the demand", text: "A time-series model predicts how full the hotel will be, night by night.", nodes: ["feat", "fc"], region: "forecast" },
+      { title: "Price every night", text: "Gradient-boosted pricing turns that forecast into a suggested rate for each date.", nodes: ["fc", "price", "api"], region: "calendar" },
+      { title: "Recommend for each guest", text: "Collaborative filtering suggests the extras each guest is most likely to want.", nodes: ["feat", "rec", "api"], region: "recs" },
+      { title: "Cameras speed up check-in", text: "A YOLO model spots arriving guests so the front desk is ready before they reach it.", nodes: ["cam", "yolo", "checkin", "api"], region: "camera" },
+    ],
     flow: {
       nodes: [
         { id: "pms", label: "MySQL bookings", x: 60, y: 50, kind: "store" },

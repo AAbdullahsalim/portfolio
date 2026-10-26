@@ -59,7 +59,7 @@ export default function Nav() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
       >
-        <nav className="flex w-full max-w-3xl items-center justify-between gap-4 rounded-full border border-border bg-elevated/70 px-3 py-2 shadow-lg shadow-black/30 backdrop-blur-xl">
+        <nav className="nav-shell relative flex w-full max-w-3xl items-center justify-between gap-4 rounded-full border border-border bg-elevated/70 px-3 py-2 shadow-lg shadow-black/30 backdrop-blur-xl">
           <a href="#top" className="flex items-center gap-2 pl-1 font-mono text-sm font-medium tracking-tight" aria-label={profile.name}>
             <span className="relative">
               <Image src={profile.photo} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />

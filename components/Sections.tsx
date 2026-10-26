@@ -74,7 +74,7 @@ export function Process() {
   const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <section id="process" className="relative scroll-mt-24 py-24 md:py-32">
+    <section className="relative py-24 md:py-32">
       <Container>
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <div className="lg:sticky lg:top-32 lg:self-start">
@@ -125,7 +125,7 @@ export function Stack() {
   const all = stack.flatMap((g) => g.items);
   const half = Math.ceil(all.length / 2);
   return (
-    <section id="stack" className="relative scroll-mt-24 py-24 md:py-32">
+    <section className="relative py-24 md:py-32">
       <Container>
         <SectionHeader eyebrow="Tech stack" title="Tools I" accent="reach for" sub="From model training to the pipeline that feeds it to the trace that explains it." />
       </Container>
@@ -188,7 +188,7 @@ export function Availability() {
 export function Contact() {
   const [copied, setCopied] = useState(false);
   return (
-    <section id="contact" className="relative scroll-mt-24 overflow-hidden py-28 md:py-40">
+    <section className="relative overflow-hidden py-28 md:py-40">
             <Container className="relative text-center">
         <Reveal>
           <span className="mb-4 flex items-center justify-center gap-2 font-mono text-xs uppercase tracking-widest text-accent">

@@ -5,7 +5,7 @@ import { Container, CountUp, Reveal, SectionHeader } from "./ui";
 
 export default function About() {
   return (
-    <section id="about" className="relative scroll-mt-24 py-24 md:py-32">
+    <section className="relative py-24 md:py-32">
       <Container>
         <SectionHeader eyebrow="About me" title="The problem" accent="I solve" sub="Why most AI never leaves the demo, and what I do about it." />
 

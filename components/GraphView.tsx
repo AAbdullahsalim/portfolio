@@ -9,8 +9,10 @@ import { useTheme } from "./theme";
 
 type GNode = { id: string; label: string; tech: boolean; x: number; y: number; vx: number; vy: number; deg: number; fixed?: boolean };
 
-export default function GraphView({ project }: { project: Project }) {
+export default function GraphView({ project, highlight, compact = false }: { project: Project; highlight?: string[]; compact?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const lit = useRef<string[]>([]);
+  lit.current = highlight ?? [];
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function GraphView({ project }: { project: Project }) {
             const a = nodes[i], b = nodes[j];
             let dx = a.x - b.x, dy = a.y - b.y;
             const d2 = Math.max(dx * dx + dy * dy, 40);
-            const f = (4200 / d2) * alpha;
+            const f = (6500 / d2) * alpha;
             const d = Math.sqrt(d2);
             dx /= d;
             dy /= d;
@@ -97,11 +99,16 @@ export default function GraphView({ project }: { project: Project }) {
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const focus = hover >= 0 ? hover : dragging;
-      const lit = (i: number) => focus < 0 || i === focus || nbrs[focus].has(i);
+      // Walkthrough highlight: the step's nodes glow, their neighbours stay visible
+      const hl = new Set(lit.current.map((id) => idx.get(id)).filter((x): x is number => x !== undefined));
+      const useHl = focus < 0 && hl.size > 0;
+      const near = (i: number) => hl.has(i) || [...hl].some((h) => nbrs[h].has(i));
+      const lit2 = (i: number) => (useHl ? near(i) : focus < 0 || i === focus || nbrs[focus].has(i));
       for (const [a, b] of links) {
-        const on = focus >= 0 && (a === focus || b === focus);
+        const on = useHl ? hl.has(a) && hl.has(b) : focus >= 0 && (a === focus || b === focus);
+        const any = useHl || focus >= 0;
         ctx.strokeStyle = on ? C.accent : C.line;
-        ctx.globalAlpha = focus >= 0 && !on ? 0.12 : on ? 0.9 : 0.55;
+        ctx.globalAlpha = any && !on ? 0.12 : on ? 0.95 : 0.55;
         ctx.lineWidth = on ? 1.6 : 1;
         ctx.beginPath();
         ctx.moveTo(nodes[a].x, nodes[a].y);
@@ -110,15 +117,24 @@ export default function GraphView({ project }: { project: Project }) {
       }
       ctx.textAlign = "center";
       nodes.forEach((n, i) => {
-        const on = lit(i);
-        ctx.globalAlpha = on ? 1 : 0.18;
-        ctx.fillStyle = i === focus ? C.accent : n.tech ? C.tech : C.fg;
+        const on = lit2(i);
+        const hot = i === focus || (useHl && hl.has(i));
+        ctx.globalAlpha = on ? 1 : 0.15;
+        if (hot) {
+          ctx.fillStyle = C.accent;
+          ctx.globalAlpha = 0.22;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, radius(n) + 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = hot ? C.accent : n.tech ? C.tech : C.fg;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, radius(n) + (i === focus ? 2 : 0), 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, radius(n) + (hot ? 2.5 : 0), 0, Math.PI * 2);
         ctx.fill();
-        ctx.font = `${i === focus ? 12 : 10.5}px ${C.font}`;
-        ctx.fillStyle = n.tech ? C.tech : C.muted;
-        ctx.globalAlpha = on ? (focus >= 0 ? 1 : 0.8) : 0.12;
+        ctx.font = `${hot ? "600 12px" : "10.5px"} ${C.font}`;
+        ctx.fillStyle = hot ? C.fg : n.tech ? C.tech : C.muted;
+        ctx.globalAlpha = on ? (hot ? 1 : 0.75) : 0.1;
         ctx.fillText(n.label, n.x, n.y + radius(n) + 13);
       });
       ctx.globalAlpha = 1;
@@ -194,13 +210,13 @@ export default function GraphView({ project }: { project: Project }) {
   }, [project, theme]);
 
   return (
-    <div>
-      <canvas ref={ref} className="block h-[360px] w-full touch-none" aria-label={`${project.title} knowledge graph: components and the technology behind them`} />
-      <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 font-mono text-[11px] text-muted">
+    <div className={compact ? "h-full" : ""}>
+      <canvas ref={ref} className={`block w-full touch-none ${compact ? "h-full" : "h-[360px]"}`} aria-label={`${project.title} knowledge graph: components and the technology behind them`} />
+      {!compact && <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 font-mono text-[11px] text-muted">
         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-fg" />component</span>
         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-accent-3" />technology</span>
         <span className="ml-auto">drag nodes · hover to trace links</span>
-      </div>
+      </div>}
     </div>
   );
 }

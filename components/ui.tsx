@@ -46,35 +46,12 @@ export function Flourish() {
         <path d="M4 14 C60 4 120 4 216 10 M30 18 C90 10 150 12 200 15" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" filter="url(#rough)" />
       </svg>
     );
-  if (theme === "graffiti")
-    return (
-      <svg viewBox="0 0 220 40" className="-mt-1 mb-2 h-8 w-52" aria-hidden>
-        <path d="M0 6 H220" stroke="var(--accent)" strokeWidth="6" />
-        {[18, 52, 96, 140, 188].map((x, i) => (
-          <path key={x} d={`M${x} 6 v${10 + (i % 3) * 9}`} stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" />
-        ))}
-      </svg>
-    );
   if (theme === "pop")
     return (
       <div aria-hidden className="mb-3 flex gap-1.5">
         {["var(--accent)", "var(--accent-2)", "var(--accent-3)"].map((c) => (
           <span key={c} className="size-4 rounded-full border-2 border-black" style={{ background: c }} />
         ))}
-      </div>
-    );
-  if (theme === "maximal")
-    return (
-      <svg viewBox="0 0 240 16" className="mb-3 h-4 w-60" aria-hidden>
-        <path d="M0 8 Q10 0 20 8 T40 8 T60 8 T80 8 T100 8 T120 8 T140 8 T160 8 T180 8 T200 8 T220 8 T240 8" fill="none" stroke="var(--accent-2)" strokeWidth="3" />
-      </svg>
-    );
-  if (theme === "vector")
-    return (
-      <div aria-hidden className="mb-3 flex items-center gap-1.5">
-        <span className="h-2 w-10 rounded-full bg-accent" />
-        <span className="size-2 rounded-full bg-accent-2" />
-        <span className="size-2 rounded-full bg-accent-4" />
       </div>
     );
   return null;

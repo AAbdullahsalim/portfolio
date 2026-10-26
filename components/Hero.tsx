@@ -55,20 +55,26 @@ function LocalTime() {
   return <span suppressHydrationWarning>{time || "--:--"} PKT</span>;
 }
 
-export default function Hero() {
-  // The hero stays pinned while the page slides over it; fade it as that happens
+/** Pins the hero while the page slides up over it, fading it as that happens */
+export function HeroStage({ children }: { children: React.ReactNode }) {
   const { scrollY } = useScroll();
   const scale = useTransform(scrollY, [0, 900], [1, 0.92]);
   const opacity = useTransform(scrollY, [0, 800], [1, 0.15]);
   const blur = useTransform(scrollY, [0, 900], ["blur(0px)", "blur(6px)"]);
+  return (
+    <div id="top" className="sticky top-0 h-[100svh]">
+      <motion.div style={{ scale, opacity, filter: blur }} className="h-full">
+        {children}
+      </motion.div>
+    </div>
+  );
+}
 
+export default function Hero() {
   const words = ["I", "build", "AI", "agents"];
 
   return (
-    <div className="sticky top-0 h-[100svh]">
-        <motion.section
-          id="home"
-          style={{ scale, opacity, filter: blur }}
+        <section
           className="page-surface relative flex h-[100svh] flex-col items-center justify-center overflow-hidden"
         >
           <div aria-hidden className="grid-lines absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,black,transparent)]" />
@@ -161,7 +167,6 @@ export default function Hero() {
               <LocalTime />
             </span>
           </motion.div>
-        </motion.section>
-    </div>
+        </section>
   );
 }
