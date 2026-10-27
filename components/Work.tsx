@@ -58,7 +58,7 @@ function ProjectPlayer({ p, i }: { p: Project; i: number }) {
       ref={ref}
       id={`project-${p.slug}`}
       data-section={`project-${p.slug}`}
-      className="relative scroll-mt-24 my-8 md:my-14 mx-4 sm:mx-6 lg:mx-8 card overflow-hidden flex flex-col justify-between min-h-[680px] lg:h-[86vh] lg:min-h-[720px] lg:max-h-[880px] shadow-2xl border border-border"
+      className="relative scroll-mt-24 my-8 md:my-14 mx-4 sm:mx-6 lg:mx-8 card overflow-hidden flex flex-col justify-between lg:h-[86vh] lg:min-h-[720px] lg:max-h-[880px] shadow-2xl border border-border"
       aria-label={p.title}
     >
       {/* Top Header Bar */}
@@ -116,10 +116,10 @@ function ProjectPlayer({ p, i }: { p: Project; i: number }) {
       </div>
 
       {/* Main Content Body */}
-      <div className="relative flex-1 min-h-[340px] sm:min-h-[440px] p-2.5 sm:p-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] gap-4 overflow-hidden">
+      <div className="relative lg:flex-1 lg:min-h-[440px] p-2.5 sm:p-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] gap-4 overflow-hidden">
         {/* Left: Product Screen Window */}
         <div
-          className={`h-full min-h-[320px] sm:min-h-[400px] flex-1 flex-col rounded-2xl border border-border overflow-hidden shadow-lg ${
+          className={`lg:h-full lg:min-h-[400px] lg:flex-1 flex-col rounded-2xl border border-border overflow-hidden shadow-lg ${
             mobileTab === "screen" ? "flex" : "hidden lg:flex"
           }`}
         >
@@ -140,7 +140,7 @@ function ProjectPlayer({ p, i }: { p: Project; i: number }) {
           </div>
 
           {/* Interactive Screen View */}
-          <div className={`relative min-h-[280px] sm:min-h-[360px] flex-1 overflow-auto ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
+          <div className={`relative aspect-[16/10] lg:aspect-auto lg:min-h-[360px] lg:flex-1 overflow-hidden ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
             <ProductScreen project={p} region={active?.region ?? null} step={step} />
           </div>
         </div>
