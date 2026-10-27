@@ -798,22 +798,46 @@ export const URLS: Record<Project["mockup"], string> = {
   hospitality: "ratestudio.app/rates/deluxe-king",
 };
 
-/** The product screen, scaled to fill its box */
+/** The product screen, scaled to fit its box on both desktop and mobile */
 export function ProductScreen({ project, region, step }: { project: Project; region: string | null; step: number }) {
   const box = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
+  const [scale, setScale] = useState(0.28);
+
   useEffect(() => {
-    const el = box.current!;
-    const fit = () => setScale(Math.min(el.clientWidth / 1280, el.clientHeight / 800));
+    const el = box.current;
+    if (!el) return;
+
+    const fit = () => {
+      const w = el.clientWidth || window.innerWidth || 360;
+      const h = el.clientHeight || 320;
+      const scaleW = w / 1280;
+      const scaleH = h > 80 ? h / 800 : scaleW;
+      const s = Math.max(0.18, Math.min(scaleW, scaleH));
+      setScale(s);
+    };
+
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
   }, []);
+
   const Screen = SCREENS[project.mockup];
   return (
-    <div ref={box} className="relative h-full w-full overflow-hidden bg-[#f6f7f9]">
-      <div className="absolute left-1/2 top-0 origin-top" style={{ width: 1280, height: 800, transform: `translateX(-50%) scale(${scale})` }}>
+    <div ref={box} className="relative h-full w-full min-h-[280px] sm:min-h-[360px] overflow-hidden bg-[#f6f7f9]">
+      <div
+        className="absolute left-1/2 top-0 origin-top"
+        style={{
+          width: 1280,
+          height: 800,
+          transform: `translateX(-50%) scale(${scale})`,
+          willChange: "transform",
+        }}
+      >
         <Active.Provider value={{ region, step }}>
           <Screen />
         </Active.Provider>

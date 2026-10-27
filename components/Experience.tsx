@@ -298,7 +298,8 @@ function Scribble() {
 }
 
 export default function Experience() {
-  const [active, setActive] = useState(0);
+  const fastIndex = experience.findIndex((r) => r.company.toLowerCase().includes("fast"));
+  const [active, setActive] = useState(fastIndex !== -1 ? fastIndex : 0);
   const [indexOpen, setIndexOpen] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { margin: "-30% 0px -30% 0px" });

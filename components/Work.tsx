@@ -116,10 +116,10 @@ function ProjectPlayer({ p, i }: { p: Project; i: number }) {
       </div>
 
       {/* Main Content Body */}
-      <div className="relative flex-1 min-h-0 p-3 sm:p-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] gap-4 overflow-hidden">
+      <div className="relative flex-1 min-h-[340px] sm:min-h-[440px] p-2.5 sm:p-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] gap-4 overflow-hidden">
         {/* Left: Product Screen Window */}
         <div
-          className={`h-full flex-col rounded-2xl border border-border overflow-hidden shadow-lg ${
+          className={`h-full min-h-[320px] sm:min-h-[400px] flex-1 flex-col rounded-2xl border border-border overflow-hidden shadow-lg ${
             mobileTab === "screen" ? "flex" : "hidden lg:flex"
           }`}
         >
@@ -140,7 +140,7 @@ function ProjectPlayer({ p, i }: { p: Project; i: number }) {
           </div>
 
           {/* Interactive Screen View */}
-          <div className={`relative min-h-0 flex-1 overflow-auto ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
+          <div className={`relative min-h-[280px] sm:min-h-[360px] flex-1 overflow-auto ${dark ? "bg-[#0b0b12]" : "bg-[#f6f7f9]"}`}>
             <ProductScreen project={p} region={active?.region ?? null} step={step} />
           </div>
         </div>

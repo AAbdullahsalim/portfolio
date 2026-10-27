@@ -28,11 +28,11 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: "#0d0d0c" };
+export const viewport: Viewport = { themeColor: "#fbf8ef" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="studio" className={fontVars} suppressHydrationWarning>
+    <html lang="en" data-theme="sketch" className={fontVars} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

@@ -13,14 +13,14 @@ export const THEMES = [
 export type ThemeId = (typeof THEMES)[number]["id"];
 const KEY = "taha-style";
 
-// Runs before paint so the saved style shows without a flash
-export const themeScript = `try{var t=localStorage.getItem("${KEY}");if(t==="studio"||t==="pop"||t==="sketch")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+// Runs before paint so the saved style shows without a flash; defaults to sketch (drawing mood)
+export const themeScript = `try{var t=localStorage.getItem("${KEY}");if(t==="studio"||t==="pop"||t==="sketch"){document.documentElement.setAttribute("data-theme",t)}else{document.documentElement.setAttribute("data-theme","sketch")}}catch(e){}`;
 
 type Ctx = {
   theme: ThemeId;
   setTheme: (t: ThemeId, origin?: { x: number; y: number }) => void;
 };
-const ThemeContext = createContext<Ctx>({ theme: "studio", setTheme: () => {} });
+const ThemeContext = createContext<Ctx>({ theme: "sketch", setTheme: () => {} });
 export const useTheme = () => useContext(ThemeContext);
 
 /** The section crossing the middle of the screen; used to keep your place when layouts change */
@@ -78,14 +78,16 @@ export function scrollToSection(hash: string) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>("studio");
-  const themeRef = useRef<ThemeId>("studio");
+  const [theme, setThemeState] = useState<ThemeId>("sketch");
+  const themeRef = useRef<ThemeId>("sketch");
 
   useEffect(() => {
     const t = document.documentElement.getAttribute("data-theme") as ThemeId | null;
     if (t && THEMES.some((x) => x.id === t)) {
       setThemeState(t);
       themeRef.current = t;
+    } else {
+      document.documentElement.setAttribute("data-theme", "sketch");
     }
   }, []);
 
