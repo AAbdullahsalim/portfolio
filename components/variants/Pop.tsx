@@ -296,6 +296,13 @@ export function PopContact() {
               LinkedIn ↗
             </a>
           </div>
+          <a href={profile.phoneHref} className="block rotate-1 border-4 border-black bg-white p-4 text-center shadow-[6px_6px_0_#111] transition-transform hover:rotate-0">
+            <span className="block font-[family-name:var(--font-bangers)] text-3xl">Ring ring! ☎</span>
+            <span className="font-[family-name:var(--font-archivo)] text-sm font-bold">{profile.phone}</span>
+          </a>
+          <a href={profile.whatsapp} target="_blank" rel="noreferrer" className="btn btn-ghost !bg-[#25d366]">
+            WhatsApp ↗
+          </a>
         </div>
       </div>
     </Shell>
@@ -311,6 +318,7 @@ export function PopFooter() {
         <p className="comic-caption !bg-white">To be continued… in your project</p>
         <div className="mt-2 flex gap-4 font-[family-name:var(--font-archivo)] text-sm font-black uppercase">
           <a href={`mailto:${profile.email}`} className="underline decoration-4 underline-offset-4">Email</a>
+          <a href={profile.phoneHref} className="underline decoration-4 underline-offset-4">Call</a>
           <a href={profile.linkedin} target="_blank" rel="noreferrer" className="underline decoration-4 underline-offset-4">LinkedIn</a>
           <a href="#top" className="underline decoration-4 underline-offset-4">Back to the cover</a>
         </div>

@@ -225,6 +225,10 @@ export function Contact() {
               LinkedIn ↗
             </a>
           </div>
+          <p className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-muted">
+            <a href={profile.phoneHref} className="font-mono text-fg hover:text-accent">☎ {profile.phone}</a>
+            <a href={profile.whatsapp} target="_blank" rel="noreferrer" className="text-sm underline decoration-accent underline-offset-4 hover:text-fg">WhatsApp ↗</a>
+          </p>
         </Reveal>
       </Container>
     </section>
@@ -261,6 +265,8 @@ export function Footer() {
               <p className="mb-3 font-mono text-[11px] uppercase tracking-widest text-subtle">Connect</p>
               <ul className="space-y-2 text-muted">
                 <li><a href={`mailto:${profile.email}`} className="hover:text-fg">Email</a></li>
+                <li><a href={profile.phoneHref} className="hover:text-fg">{profile.phone}</a></li>
+                <li><a href={profile.whatsapp} target="_blank" rel="noreferrer" className="hover:text-fg">WhatsApp</a></li>
                 <li><a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-fg">LinkedIn</a></li>
               </ul>
             </div>

@@ -285,7 +285,16 @@ export function SketchContact() {
               {copied ? "copied ✓" : "copy email"}
             </button>
           </div>
-          <p className="pencil mt-6 text-lg">
+          <p className="pencil mt-6 text-xl">
+            or call me:{" "}
+            <a href={profile.phoneHref} className="hand text-3xl font-bold text-accent underline decoration-wavy underline-offset-4">
+              {profile.phone}
+            </a>{" "}
+            <a href={profile.whatsapp} target="_blank" rel="noreferrer" className="whitespace-nowrap underline decoration-wavy decoration-accent underline-offset-4">
+              (WhatsApp too)
+            </a>
+          </p>
+          <p className="pencil mt-3 text-lg">
             p.s. I&apos;m on{" "}
             <a href={profile.linkedin} target="_blank" rel="noreferrer" className="underline decoration-wavy decoration-accent underline-offset-4">
               LinkedIn
