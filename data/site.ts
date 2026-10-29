@@ -13,6 +13,7 @@ export const profile = {
   phoneHref: "tel:+923074288018",
   whatsapp: "https://wa.me/923074288018",
   linkedin: "https://www.linkedin.com/in/tahaumar/",
+  github: "https://github.com/CapCoder0",
   photo: "/taha.png",
   headline: "I build AI agents that hold up in production.",
   intro:

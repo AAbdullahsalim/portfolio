@@ -280,7 +280,7 @@ export function PopContact() {
             <span className="block font-[family-name:var(--font-bangers)] text-4xl">Send a signal!</span>
             <span className="font-[family-name:var(--font-archivo)] text-sm font-bold">{profile.email}</span>
           </a>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => {
@@ -294,6 +294,9 @@ export function PopContact() {
             </button>
             <a href={profile.linkedin} target="_blank" rel="noreferrer" className="btn btn-ghost flex-1 !bg-white">
               LinkedIn ↗
+            </a>
+            <a href={profile.github} target="_blank" rel="noreferrer" className="btn btn-ghost flex-1 !bg-white">
+              GitHub ↗
             </a>
           </div>
           <a href={profile.phoneHref} className="block rotate-1 border-4 border-black bg-white p-4 text-center shadow-[6px_6px_0_#111] transition-transform hover:rotate-0">
@@ -316,10 +319,11 @@ export function PopFooter() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-16 text-center">
         <p className="comic-title text-7xl sm:text-8xl">THE END?</p>
         <p className="comic-caption !bg-white">To be continued… in your project</p>
-        <div className="mt-2 flex gap-4 font-[family-name:var(--font-archivo)] text-sm font-black uppercase">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 font-[family-name:var(--font-archivo)] text-sm font-black uppercase">
           <a href={`mailto:${profile.email}`} className="underline decoration-4 underline-offset-4">Email</a>
           <a href={profile.phoneHref} className="underline decoration-4 underline-offset-4">Call</a>
           <a href={profile.linkedin} target="_blank" rel="noreferrer" className="underline decoration-4 underline-offset-4">LinkedIn</a>
+          <a href={profile.github} target="_blank" rel="noreferrer" className="underline decoration-4 underline-offset-4">GitHub</a>
           <a href="#top" className="underline decoration-4 underline-offset-4">Back to the cover</a>
         </div>
         <p className="font-[family-name:var(--font-archivo)] text-xs font-bold">© {new Date().getFullYear()} {profile.name} · Press ⌘K anywhere</p>

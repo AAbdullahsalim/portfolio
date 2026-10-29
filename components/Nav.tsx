@@ -175,6 +175,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
       { label: "Call me", hint: profile.phone, run: () => (window.location.href = profile.phoneHref) },
       { label: "Message on WhatsApp", hint: "wa.me", run: () => window.open(profile.whatsapp, "_blank") },
       { label: "Open LinkedIn", hint: "linkedin.com/in/tahaumar", run: () => window.open(profile.linkedin, "_blank") },
+      { label: "Open GitHub", hint: "github.com/CapCoder0", run: () => window.open(profile.github, "_blank") },
     ],
     [go, onClose, setTheme],
   );

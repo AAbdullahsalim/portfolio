@@ -299,6 +299,10 @@ export function SketchContact() {
             <a href={profile.linkedin} target="_blank" rel="noreferrer" className="underline decoration-wavy decoration-accent underline-offset-4">
               LinkedIn
             </a>{" "}
+            &amp;{" "}
+            <a href={profile.github} target="_blank" rel="noreferrer" className="underline decoration-wavy decoration-accent underline-offset-4">
+              GitHub
+            </a>{" "}
             too.
           </p>
         </div>

@@ -224,6 +224,9 @@ export function Contact() {
             <a href={profile.linkedin} target="_blank" rel="noreferrer" className="btn btn-ghost">
               LinkedIn ↗
             </a>
+            <a href={profile.github} target="_blank" rel="noreferrer" className="btn btn-ghost">
+              GitHub ↗
+            </a>
           </div>
           <p className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-muted">
             <a href={profile.phoneHref} className="font-mono text-fg hover:text-accent">☎ {profile.phone}</a>
@@ -268,6 +271,7 @@ export function Footer() {
                 <li><a href={profile.phoneHref} className="hover:text-fg">{profile.phone}</a></li>
                 <li><a href={profile.whatsapp} target="_blank" rel="noreferrer" className="hover:text-fg">WhatsApp</a></li>
                 <li><a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-fg">LinkedIn</a></li>
+                <li><a href={profile.github} target="_blank" rel="noreferrer" className="hover:text-fg">GitHub</a></li>
               </ul>
             </div>
             <div>
